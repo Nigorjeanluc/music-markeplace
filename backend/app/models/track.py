@@ -13,6 +13,7 @@ class Track(Base):
     date = Column(Date, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Define the relationship with the PlaylistTrack model
+    # Relationships
     playlist_tracks = relationship("PlaylistTrack", back_populates="track")
+    album = relationship("Album", back_populates="tracks")
     album_id = Column(UUID(as_uuid=True), ForeignKey("albums.id", ondelete="CASCADE"), nullable=False)

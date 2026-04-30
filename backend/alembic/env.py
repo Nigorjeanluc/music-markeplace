@@ -14,6 +14,9 @@ sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..'
 from app.db.base import Base
 from app.core.config import settings
 
+# Import all models for Alembic autogenerate support
+from app import models
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
