@@ -22,3 +22,4 @@ class Album(Base):
     purchases = relationship("Purchase", back_populates="album", cascade="all, delete-orphan")
     ratings = relationship("Rating", back_populates="album", cascade="all, delete-orphan")
     tracks = relationship("Track", back_populates="album", cascade="all, delete-orphan")
+    genres = relationship("Genre", secondary="album_genres", back_populates="albums")
