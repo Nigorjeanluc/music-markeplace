@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from app.models.genre import Genre
 from app.schemas.genre import GenreCreate, GenreUpdate
+from app.core.uuid_utils import is_valid_uuid
 
 
 class GenreService:
@@ -23,6 +24,8 @@ class GenreService:
 
     def get_genre(self, genre_id: str) -> Optional[Genre]:
         """Get a genre by ID."""
+        if not is_valid_uuid(genre_id):
+            return None
         return self.db.query(Genre).filter(Genre.id == genre_id).first()
 
     def create_genre(self, genre_in: GenreCreate) -> Genre:

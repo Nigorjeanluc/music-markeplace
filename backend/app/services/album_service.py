@@ -9,6 +9,7 @@ from app.models.purchase import Purchase
 from app.models.album_genres import AlbumGenre
 from app.models.genre import Genre
 from app.schemas.album import AlbumCreate, AlbumUpdate
+from app.core.uuid_utils import is_valid_uuid
 
 
 class AlbumService:
@@ -36,6 +37,8 @@ class AlbumService:
         """Get albums with filters, returning tuples of (album, avg_rating, genre_names, artist)."""
         query = self.db.query(Album)
         if artist_id:
+            if not is_valid_uuid(artist_id):
+                return []
             query = query.filter(Album.artist_id == artist_id)
         if search:
             query = query.filter(Album.name.ilike(f"%{search}%"))
@@ -64,6 +67,8 @@ class AlbumService:
 
     def get_album(self, album_id: str) -> Optional[Tuple[Album, Optional[float], List[str], Optional[Artist]]]:
         """Get album detail with rating, returning tuple of (album, avg_rating, genre_names, artist)."""
+        if not is_valid_uuid(album_id):
+            return None
         album = self.db.query(Album).filter(Album.id == album_id).first()
         if not album:
             return None
@@ -86,6 +91,8 @@ class AlbumService:
     def create_album(self, album_in: AlbumCreate) -> Optional[Album]:
         """Create a new album."""
         # Verify artist exists
+        if not is_valid_uuid(album_in.artist_id):
+            return None
         artist = self.db.query(Artist).filter(Artist.id == album_in.artist_id).first()
         if not artist:
             return None
@@ -110,6 +117,8 @@ class AlbumService:
 
     def update_album(self, album_id: str, album_in: AlbumUpdate) -> Optional[Album]:
         """Update an album."""
+        if not is_valid_uuid(album_id):
+            return None
         album = self.db.query(Album).filter(Album.id == album_id).first()
         if not album:
             return None
@@ -135,6 +144,8 @@ class AlbumService:
 
     def delete_album(self, album_id: str) -> bool:
         """Delete an album. Returns True if deleted, False if not found."""
+        if not is_valid_uuid(album_id):
+            return False
         album = self.db.query(Album).filter(Album.id == album_id).first()
         if not album:
             return False

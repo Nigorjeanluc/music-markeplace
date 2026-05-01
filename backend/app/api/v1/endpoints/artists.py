@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.core.security import get_current_admin_user
 from app.services.artist_service import ArtistService
 from app.schemas.artist import ArtistCreate, ArtistUpdate, ArtistResponse
+from app.models.album import Album
 
 router = APIRouter()
 

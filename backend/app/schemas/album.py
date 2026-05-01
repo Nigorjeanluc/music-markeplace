@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional, List
 from uuid import UUID
@@ -10,6 +10,7 @@ class AlbumBase(BaseModel):
     release_date: Optional[date] = None
     artist_id: str
     genre_ids: List[str] = []
+    cover_image_url: str | None = None
 
 
 class AlbumCreate(AlbumBase):
@@ -32,8 +33,8 @@ class AlbumResponse(BaseModel):
     artist_name: str
     rating: Optional[float] = None
     genre_names: List[str] = []
+    cover_image_url: str | None = None
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

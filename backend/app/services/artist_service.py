@@ -1,9 +1,19 @@
+import uuid
 from sqlalchemy.orm import Session
 from typing import List, Optional, Tuple
 
 from app.models.artist import Artist
 from app.models.album import Album
 from app.schemas.artist import ArtistCreate, ArtistUpdate
+
+
+def is_valid_uuid(val: str) -> bool:
+    """Check if a string is a valid UUID."""
+    try:
+        uuid.UUID(val)
+        return True
+    except ValueError:
+        return False
 
 
 class ArtistService:
@@ -31,6 +41,8 @@ class ArtistService:
 
     def get_artist(self, artist_id: str) -> Optional[Tuple[Artist, int]]:
         """Get artist detail with album count, returning tuple of (artist, album_count)."""
+        if not is_valid_uuid(artist_id):
+            return None
         artist = self.db.query(Artist).filter(Artist.id == artist_id).first()
         if not artist:
             return None
@@ -38,8 +50,13 @@ class ArtistService:
         album_count = self.db.query(Album).filter(Album.artist_id == artist.id).count()
         return (artist, album_count)
 
-    def create_artist(self, artist_in: ArtistCreate) -> Artist:
-        """Create a new artist."""
+    def create_artist(self, artist_in: ArtistCreate) -> Optional[Artist]:
+        """Create a new artist. Returns None if performing_name already exists."""
+        # Check for duplicate performing_name
+        existing = self.db.query(Artist).filter(Artist.performing_name == artist_in.performing_name).first()
+        if existing:
+            return None
+
         artist = Artist(
             real_name=artist_in.real_name,
             performing_name=artist_in.performing_name,
@@ -68,6 +85,8 @@ class ArtistService:
 
     def delete_artist(self, artist_id: str) -> bool:
         """Delete an artist. Returns True if deleted, False if not found."""
+        if not is_valid_uuid(artist_id):
+            return False
         artist = self.db.query(Artist).filter(Artist.id == artist_id).first()
         if not artist:
             return False

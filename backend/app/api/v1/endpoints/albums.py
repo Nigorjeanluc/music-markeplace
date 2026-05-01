@@ -1,11 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func, select
 from typing import List, Optional
 
 from app.db.session import get_db
 from app.core.security import get_current_admin_user
 from app.services.album_service import AlbumService
 from app.schemas.album import AlbumCreate, AlbumUpdate, AlbumResponse
+from app.models.album import Album
+from app.models.artist import Artist
+from app.models.genre import Genre
+from app.models.album_genres import AlbumGenre
+from app.models.rating import Rating
+from app.models.purchase import Purchase
 
 router = APIRouter()
 

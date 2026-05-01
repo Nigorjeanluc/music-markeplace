@@ -8,6 +8,7 @@ from app.models.album import Album
 from app.models.artist import Artist
 from app.models.rating import Rating
 from app.schemas.purchase import PurchaseCreate, PurchaseResponse
+from app.core.uuid_utils import is_valid_uuid
 
 
 class PurchaseService:
@@ -16,6 +17,8 @@ class PurchaseService:
 
     def create_purchase(self, user_id: str, purchase_in: PurchaseCreate) -> Optional[Purchase]:
         """Purchase an album. Returns None if album not found."""
+        if not is_valid_uuid(user_id) or not is_valid_uuid(purchase_in.album_id):
+            return None
         album = self.db.query(Album).filter(Album.id == purchase_in.album_id).first()
         if not album:
             return None
@@ -37,6 +40,8 @@ class PurchaseService:
 
     def get_user_purchases(self, user_id: str) -> List[Tuple[Purchase, Album, Optional[Artist], Optional[float], Optional[float]]]:
         """Get all purchases for a user with album, artist, user rating, and avg rating."""
+        if not is_valid_uuid(user_id):
+            return []
         purchases = self.db.query(Purchase).filter(Purchase.user_id == user_id).all()
 
         result = []

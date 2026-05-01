@@ -7,6 +7,7 @@ from app.models.rating import Rating
 from app.models.purchase import Purchase
 from app.models.album import Album
 from app.schemas.rating import RatingCreate, RatingUpdate, RatingResponse
+from app.core.uuid_utils import is_valid_uuid
 
 
 class RatingService:
@@ -15,6 +16,8 @@ class RatingService:
 
     def create_or_update_rating(self, user_id: str, rating_in: RatingCreate) -> Optional[Tuple[Rating, float]]:
         """Rate an album (must have purchased it first). Returns (rating, avg_rating) or None if invalid."""
+        if not is_valid_uuid(user_id) or not is_valid_uuid(rating_in.album_id):
+            return None
         # Verify album exists
         album = self.db.query(Album).filter(Album.id == rating_in.album_id).first()
         if not album:
@@ -66,6 +69,8 @@ class RatingService:
 
     def update_rating(self, user_id: str, album_id: str, rating_in: RatingUpdate) -> Optional[Tuple[Rating, float]]:
         """Update user's rating for an album. Returns (rating, avg_rating) or None if not found/invalid."""
+        if not is_valid_uuid(user_id) or not is_valid_uuid(album_id):
+            return None
         # Validate rating range
         if rating_in.rating < 1 or rating_in.rating > 5:
             return None
@@ -91,6 +96,8 @@ class RatingService:
 
     def get_user_ratings(self, user_id: str) -> List[Tuple[Rating, Album, Optional[float]]]:
         """Get all ratings by a user with album and avg rating."""
+        if not is_valid_uuid(user_id):
+            return []
         ratings = self.db.query(Rating).filter(Rating.user_id == user_id).all()
 
         result = []
@@ -106,6 +113,8 @@ class RatingService:
 
     def get_album_ratings(self, album_id: str) -> Optional[Tuple[List[Rating], Album, Optional[float]]]:
         """Get all ratings for an album. Returns (ratings, album, avg_rating) or None if album not found."""
+        if not is_valid_uuid(album_id):
+            return None
         album = self.db.query(Album).filter(Album.id == album_id).first()
         if not album:
             return None

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from typing import Optional, List
 from uuid import UUID
@@ -27,8 +27,7 @@ class TrackInPlaylist(BaseModel):
     album_name: str
     artist_name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaylistResponse(BaseModel):
@@ -37,8 +36,7 @@ class PlaylistResponse(BaseModel):
     created_at: datetime
     track_count: int = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaylistDetailResponse(PlaylistResponse):

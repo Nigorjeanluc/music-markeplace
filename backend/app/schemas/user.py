@@ -1,11 +1,12 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import datetime
 from typing import Optional
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     username: str
+    avatar_url: str | None = None
 
 
 class UserCreate(UserBase):
@@ -22,6 +23,6 @@ class UserResponse(UserBase):
     is_admin: bool
     is_active: bool
     created_at: datetime
+    avatar_url: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
