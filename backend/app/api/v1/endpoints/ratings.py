@@ -100,19 +100,18 @@ def get_my_ratings(
 @router.get("/album/{album_id}", response_model=List[RatingResponse])
 def get_album_ratings(
     album_id: str,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    """Get all ratings for an album + average (public endpoint)."""
+    """Get all ratings for an album + average (public endpoint). Supports pagination."""
     rating_service = RatingService(db)
-    result = rating_service.get_album_ratings(album_id)
+    result = rating_service.get_album_ratings(album_id, skip=skip, limit=limit)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Album not found"
         )
 
-    ratings, album, avg_rating = result
-    return [
-        rating_service.build_rating_response(r, album.name, avg_rating)
-        for r in ratings
-    ]
+    rating_responses, _ = result
+    return rating_responses

@@ -31,6 +31,8 @@ ARTIST3_ID = "ad344b59-be51-46a8-865e-b812f83ec8cd"  # Pink Floyd
 ARTIST4_ID = "9187b1a0-6911-4bc8-a547-0b2e374a17a3"  # Radiohead
 ARTIST5_ID = "89ba2356-f4df-4112-8b67-d3c9f7781cb8"  # James Brown
 ARTIST6_ID = "687863c6-eb89-4178-8d90-b7db89d93387"  # Daft Punk
+ARTIST7_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479"  # Saleheen Artist
+ARTIST8_ID = "7c9e3b6a-1d2f-4a8c-b123-5f6e8c9d0e1a"  # Vishnu Artist
 
 GENRE1_ID = "66d3b254-5979-494e-a702-417dcb1c3dee"  # Jazz
 GENRE2_ID = "0cf468a2-e9e7-4ab8-a312-95fca026ff45"  # Rock
@@ -159,7 +161,7 @@ def seed_data():
                 real_name="Miles Davis",
                 performing_name="Miles Davis",
                 date_of_birth=date(1926, 5, 26),
-                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/darktopsia-nWjT3nbHhso-unsplash.jpg",
+                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/darktopia-nWjT3nbHhso-unsplash.jpg",
                 created_at=datetime(2025, 1, 10, 11, 0, 0),
                 updated_at=datetime(2025, 1, 10, 11, 0, 0),
             ),
@@ -195,9 +197,27 @@ def seed_data():
                 real_name="Daft Punk",
                 performing_name="Daft Punk",
                 date_of_birth=date(1993, 1, 1),
-                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/darktopsia-nWjT3nbHhso-unsplash.jpg",
+                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/darktopia-nWjT3nbHhso-unsplash.jpg",
                 created_at=datetime(2025, 1, 10, 15, 0, 0),
                 updated_at=datetime(2025, 1, 10, 15, 0, 0),
+            ),
+            Artist(
+                id=uuid.UUID(ARTIST7_ID),
+                real_name="Saleheen Muhammad Mustak",
+                performing_name="Saleheen",
+                date_of_birth=date(1990, 1, 1),
+                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/saleheen-muhammad-mustak-hieFj0PZ-Jk-unsplash.jpg",
+                created_at=datetime(2025, 1, 10, 16, 0, 0),
+                updated_at=datetime(2025, 1, 10, 16, 0, 0),
+            ),
+            Artist(
+                id=uuid.UUID(ARTIST8_ID),
+                real_name="Vishnu R Nair",
+                performing_name="Vishnu",
+                date_of_birth=date(1992, 1, 1),
+                photo_url="https://music-marketplace-images.s3.us-east-1.amazonaws.com/artists/vishnu-r-nair-kWCHq48Xwgw-unsplash.jpg",
+                created_at=datetime(2025, 1, 10, 17, 0, 0),
+                updated_at=datetime(2025, 1, 10, 17, 0, 0),
             ),
         ]
         db.add_all(artists)

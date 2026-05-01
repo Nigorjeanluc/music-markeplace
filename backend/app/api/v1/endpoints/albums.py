@@ -52,6 +52,7 @@ def list_albums(
             artist_name=artist.performing_name if artist else "",
             rating=float(avg_rating) if avg_rating else None,
             genre_names=genre_names,
+            cover_image_url=album.cover_image_url,
             created_at=album.created_at,
             updated_at=album.updated_at,
         ))
@@ -80,6 +81,7 @@ def get_album(album_id: str, db: Session = Depends(get_db)):
         artist_name=artist.performing_name if artist else "",
         rating=float(avg_rating) if avg_rating else None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )
@@ -118,6 +120,7 @@ def create_album(
         artist_name=artist.performing_name if artist else "",
         rating=None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )
@@ -159,6 +162,7 @@ def update_album(
         artist_name=artist.performing_name if artist else "",
         rating=float(avg_rating) if avg_rating else None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )

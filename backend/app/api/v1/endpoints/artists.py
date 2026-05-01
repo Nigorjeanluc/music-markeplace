@@ -29,6 +29,7 @@ def list_artists(
             real_name=artist.real_name,
             performing_name=artist.performing_name,
             date_of_birth=artist.date_of_birth,
+            photo_url=artist.photo_url,
             created_at=artist.created_at,
             album_count=album_count
         )
@@ -53,6 +54,7 @@ def get_artist(artist_id: str, db: Session = Depends(get_db)):
         real_name=artist.real_name,
         performing_name=artist.performing_name,
         date_of_birth=artist.date_of_birth,
+        photo_url=artist.photo_url,
         created_at=artist.created_at,
         album_count=album_count
     )
@@ -72,6 +74,7 @@ def create_artist(
         real_name=artist.real_name,
         performing_name=artist.performing_name,
         date_of_birth=artist.date_of_birth,
+        photo_url=artist.photo_url,
         created_at=artist.created_at,
         album_count=0  # New artist has no albums yet
     )
@@ -100,6 +103,7 @@ def update_artist(
         real_name=artist.real_name,
         performing_name=artist.performing_name,
         date_of_birth=artist.date_of_birth,
+        photo_url=artist.photo_url,
         created_at=artist.created_at,
         album_count=album_count
     )
