@@ -50,7 +50,12 @@ export default function ArtistsPage() {
               className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5 cursor-pointer hover:border-[#aa3bff]/40 transition-colors"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center text-2xl">🎤</div>
+                <div className="w-14 h-14 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center text-2xl overflow-hidden">
+                  {artist.photo_url
+                    ? <img src={artist.photo_url} alt={artist.performing_name} className="w-full h-full object-cover" />
+                    : '🎤'
+                  }
+                </div>
                 <div>
                   <p className="text-white font-semibold">{artist.performing_name}</p>
                   <p className="text-[#4a4b5a] text-xs">{artist.real_name}</p>

@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useAlbums, useArtists } from '../hooks/useApi'
+import { useAlbums, useArtists, useGenres } from '../hooks/useApi'
 
 const ALBUM_COLORS = ['#1a0a2e', '#0a1a2e', '#0a2e1a', '#1a1a0a', '#2e0a1a', '#0a0a2e']
-const MATCH_SCORES = [92, 98, 84, 95, 88, 91]
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -29,16 +27,26 @@ function AlbumSkeleton() {
 }
 
 export default function MarketplacePage() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [submitted, setSubmitted] = useState('')
+  const [activeGenre, setActiveGenre] = useState<string | undefined>()
 
-  const { data: albums, isLoading: albumsLoading, isError: albumsError } = useAlbums(submitted ? { search: submitted } : undefined)
+  const { data: albums, isLoading: albumsLoading, isError: albumsError } = useAlbums(
+    submitted || activeGenre ? { search: submitted || undefined, genre: activeGenre } : undefined
+  )
   const { data: artists, isLoading: artistsLoading } = useArtists()
+  const { data: genres } = useGenres()
 
-  const trendingAlbums = albums?.slice(0, 4) ?? []
+  const isFiltered = !!submitted || !!activeGenre
+  const displayAlbums = isFiltered ? (albums ?? []) : (albums?.slice(0, 8) ?? [])
   const spotlightArtists = artists?.slice(0, 3) ?? []
+
+  const clearFilters = () => {
+    setSearch('')
+    setSubmitted('')
+    setActiveGenre(undefined)
+  }
 
   return (
     <div>
@@ -56,7 +64,7 @@ export default function MarketplacePage() {
           <p className="text-[#8a8b9a] text-sm max-w-sm mb-6">
             Curating the finest cyber-beats and atmospheric noir sounds from across the digital sprawl.
           </p>
-          <form className="flex gap-0" onSubmit={e => { e.preventDefault(); setSubmitted(search) }}>
+          <form className="flex gap-0" onSubmit={e => { e.preventDefault(); setSubmitted(search); setActiveGenre(undefined) }}>
             <div className="flex items-center bg-[#0d0e14]/80 border border-[#2a2b38] rounded-l px-4 py-2.5 gap-2 w-80">
               <span className="text-[#4a4b5a]">🔍</span>
               <input
@@ -74,21 +82,39 @@ export default function MarketplacePage() {
       </div>
 
       <div className="px-8 py-8">
-        {/* Trending Albums */}
+        {/* Genre filter pills */}
+        {genres && genres.length > 0 && (
+          <div className="flex items-center gap-2 mb-6 flex-wrap">
+            <button
+              onClick={clearFilters}
+              className={`text-xs px-3 py-1.5 rounded border transition-colors ${!activeGenre && !submitted ? 'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10' : 'border-[#2a2b38] text-[#8a8b9a] hover:border-[#4a4b5a]'}`}
+            >
+              All
+            </button>
+            {genres.map(g => (
+              <button
+                key={g.id}
+                onClick={() => { setActiveGenre(g.name === activeGenre ? undefined : g.name); setSubmitted(''); setSearch('') }}
+                className={`text-xs px-3 py-1.5 rounded border transition-colors ${activeGenre === g.name ? 'border-[#aa3bff] text-[#aa3bff] bg-[#aa3bff]/10' : 'border-[#2a2b38] text-[#8a8b9a] hover:border-[#4a4b5a]'}`}
+              >
+                {g.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Albums section */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-white text-2xl font-semibold">{submitted ? `Results for "${submitted}"` : 'Trending Albums'}</h2>
+            <h2 className="text-white text-2xl font-semibold">
+              {submitted ? `Results for "${submitted}"` : activeGenre ? activeGenre : 'Trending Albums'}
+            </h2>
             <div className="h-0.5 w-8 bg-[#00e5ff] mt-1" />
           </div>
           <div className="flex items-center gap-4">
-            {submitted && (
-              <button onClick={() => { setSearch(''); setSubmitted('') }} className="text-[#4a4b5a] text-xs hover:text-white transition-colors">
+            {isFiltered && (
+              <button onClick={clearFilters} className="text-[#4a4b5a] text-xs hover:text-white transition-colors">
                 Clear ✕
-              </button>
-            )}
-            {!submitted && (
-              <button onClick={() => navigate('/')} className="text-[#00e5ff] text-xs tracking-widest uppercase hover:text-white transition-colors">
-                View All →
               </button>
             )}
           </div>
@@ -102,10 +128,10 @@ export default function MarketplacePage() {
 
         <div className="grid grid-cols-4 gap-4 mb-10">
           {albumsLoading
-            ? Array.from({ length: 4 }).map((_, i) => <AlbumSkeleton key={i} />)
-            : trendingAlbums.length === 0
+            ? Array.from({ length: 8 }).map((_, i) => <AlbumSkeleton key={i} />)
+            : displayAlbums.length === 0
               ? <p className="col-span-4 text-[#4a4b5a] text-sm py-8 text-center">No albums found.</p>
-              : trendingAlbums.map((album, i) => (
+              : displayAlbums.map((album, i) => (
                 <div
                   key={album.id}
                   onClick={() => navigate(`/albums/${album.id}`)}
@@ -113,9 +139,12 @@ export default function MarketplacePage() {
                 >
                   <div
                     className="h-44 flex items-center justify-center text-4xl relative"
-                    style={{ background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }}
+                    style={album.cover_image_url
+                      ? { backgroundImage: `url(${album.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                      : { background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }
+                    }
                   >
-                    🎵
+                    {!album.cover_image_url && '🎵'}
                   </div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-1 mb-1">
@@ -124,8 +153,13 @@ export default function MarketplacePage() {
                     </div>
                     <p className="text-[#4a4b5a] text-xs mb-2">by {album.artist_name}</p>
                     <div className="flex items-center justify-between">
-                      {album.rating != null ? <StarRating value={album.rating} /> : <span className="text-[#2a2b38] text-sm">★★★★★</span>}
-                      <span className="text-[#8a8b9a] text-[10px] tracking-wider">{MATCH_SCORES[i % MATCH_SCORES.length]}% MATCH</span>
+                      {album.rating != null
+                        ? <StarRating value={album.rating} />
+                        : <span className="text-[#2a2b38] text-sm">★★★★★</span>
+                      }
+                      {album.genre_names.length > 0 && (
+                        <span className="text-[#4a4b5a] text-[10px] truncate max-w-[80px]">{album.genre_names[0]}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -134,11 +168,16 @@ export default function MarketplacePage() {
         </div>
 
         {/* Spotlight Artists */}
-        {!submitted && (
+        {!isFiltered && (
           <>
-            <div className="mb-5">
-              <h2 className="text-white text-2xl font-semibold">Spotlight Artists</h2>
-              <div className="h-0.5 w-8 bg-[#aa3bff] mt-1" />
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-white text-2xl font-semibold">Spotlight Artists</h2>
+                <div className="h-0.5 w-8 bg-[#aa3bff] mt-1" />
+              </div>
+              <button onClick={() => navigate('/artists')} className="text-[#aa3bff] text-xs tracking-widest uppercase hover:text-white transition-colors">
+                View All →
+              </button>
             </div>
             <div className="grid grid-cols-3 gap-4">
               {artistsLoading
@@ -151,21 +190,21 @@ export default function MarketplacePage() {
                     onClick={() => navigate(`/artists/${artist.id}`)}
                     className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4 cursor-pointer hover:border-[#aa3bff]/40 transition-colors"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center text-lg">🎤</div>
-                        <div>
-                          <p className="text-white text-sm font-medium">{artist.performing_name}</p>
-                          <p className="text-[#4a4b5a] text-xs">{artist.real_name}</p>
-                        </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center text-lg overflow-hidden flex-shrink-0">
+                        {artist.photo_url
+                          ? <img src={artist.photo_url} alt={artist.performing_name} className="w-full h-full object-cover" />
+                          : '🎤'
+                        }
                       </div>
-                      {user && <button className="text-[#4a4b5a] hover:text-white">⋯</button>}
+                      <div className="min-w-0">
+                        <p className="text-white text-sm font-medium truncate">{artist.performing_name}</p>
+                        <p className="text-[#4a4b5a] text-xs truncate">{artist.real_name}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="border border-[#2a2b38] text-[#8a8b9a] text-[10px] px-2 py-0.5 rounded tracking-wider">
-                        {artist.album_count} ALBUMS
-                      </span>
-                    </div>
+                    <span className="border border-[#2a2b38] text-[#8a8b9a] text-[10px] px-2 py-0.5 rounded tracking-wider">
+                      {artist.album_count} ALBUMS
+                    </span>
                   </div>
                 ))
               }

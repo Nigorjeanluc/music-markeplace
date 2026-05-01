@@ -32,25 +32,45 @@ export default function ArtistDetailPage() {
     )
   }
 
+  // Derive real stats from discography
+  const ratedAlbums = albums?.filter(a => a.rating != null) ?? []
+  const avgRating = ratedAlbums.length > 0
+    ? ratedAlbums.reduce((s, a) => s + a.rating!, 0) / ratedAlbums.length
+    : null
+  const allGenres = [...new Set(albums?.flatMap(a => a.genre_names) ?? [])]
+  const totalValue = albums?.reduce((s, a) => s + a.price, 0) ?? 0
+
   return (
     <div>
       {/* Hero */}
-      <div className="relative h-72 flex items-end" style={{ background: 'linear-gradient(180deg, #1a0a2e 0%, #0d0e14 100%)' }}>
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'repeating-linear-gradient(45deg, #aa3bff11 0px, #aa3bff11 1px, transparent 1px, transparent 20px)' }} />
+      <div
+        className="relative h-72 flex items-end overflow-hidden"
+        style={artist.photo_url
+          ? { backgroundImage: `url(${artist.photo_url})`, backgroundSize: 'cover', backgroundPosition: 'center top' }
+          : { background: 'linear-gradient(180deg, #1a0a2e 0%, #0d0e14 100%)' }
+        }
+      >
+        {artist.photo_url && <div className="absolute inset-0 bg-gradient-to-t from-[#0d0e14] via-[#0d0e14]/60 to-transparent" />}
+        {!artist.photo_url && (
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: 'repeating-linear-gradient(45deg, #aa3bff11 0px, #aa3bff11 1px, transparent 1px, transparent 20px)' }} />
+        )}
         <div className="relative px-8 pb-6 w-full flex items-end justify-between">
-          <div>
-            <p className="text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase mb-2">Featured Producer</p>
-            <h1 className="text-white text-3xl font-bold mb-2">{artist.performing_name}</h1>
-            <p className="text-[#8a8b9a] text-sm">{artist.album_count} Albums · Born {new Date(artist.date_of_birth).getFullYear()}</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="bg-[#00e5ff] text-[#0d0e14] px-5 py-2.5 rounded text-sm font-semibold hover:bg-[#00b8cc] transition-colors">
-              ▶ Follow
-            </button>
-            <button className="border border-[#2a2b38] text-white px-5 py-2.5 rounded text-sm hover:border-[#00e5ff] transition-colors">
-              ↗ Share
-            </button>
+          <div className="flex items-end gap-5">
+            <div className="w-20 h-20 rounded-full bg-[#1a1b24] border-2 border-[#2a2b38] flex items-center justify-center text-3xl overflow-hidden flex-shrink-0">
+              {artist.photo_url
+                ? <img src={artist.photo_url} alt={artist.performing_name} className="w-full h-full object-cover" />
+                : '🎤'
+              }
+            </div>
+            <div>
+              <p className="text-[10px] tracking-[0.3em] text-[#00e5ff] uppercase mb-1">Artist</p>
+              <h1 className="text-white text-3xl font-bold mb-1">{artist.performing_name}</h1>
+              <p className="text-[#8a8b9a] text-sm">
+                {artist.album_count} {artist.album_count === 1 ? 'Album' : 'Albums'}
+                {' · '}Born {new Date(artist.date_of_birth).getFullYear()}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -63,7 +83,7 @@ export default function ArtistDetailPage() {
               <div className="w-6 h-0.5 bg-[#00e5ff]" />
               <span className="text-white text-sm font-medium">Bio</span>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Legal Identity</p>
                 <p className="text-white text-sm">{artist.real_name}</p>
@@ -72,44 +92,53 @@ export default function ArtistDetailPage() {
                 <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Date of Birth</p>
                 <p className="text-white text-sm">{new Date(artist.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
               </div>
+              {allGenres.length > 0 && (
+                <div className="col-span-2">
+                  <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Genres</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allGenres.map(g => (
+                      <span key={g} className="border border-[#2a2b38] text-[#8a8b9a] text-[10px] px-2 py-0.5 rounded tracking-wider">{g}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-[#8a8b9a] text-sm leading-relaxed">
-              {artist.performing_name} is a recording artist with {artist.album_count} album{artist.album_count !== 1 ? 's' : ''} in the catalog.
-            </p>
           </div>
 
           {/* Discography */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold">Discography</h2>
-            </div>
+            <h2 className="text-white font-semibold mb-4">Discography</h2>
             {!albums || albums.length === 0 ? (
               <p className="text-[#4a4b5a] text-sm">No albums yet.</p>
             ) : (
               <div className="grid grid-cols-2 gap-4">
                 {albums.map((album, i) => (
-                  <div key={album.id} className="bg-[#12131a] border border-[#2a2b38] rounded-lg overflow-hidden">
+                  <div
+                    key={album.id}
+                    onClick={() => navigate(`/albums/${album.id}`)}
+                    className="bg-[#12131a] border border-[#2a2b38] rounded-lg overflow-hidden cursor-pointer hover:border-[#00e5ff]/40 transition-colors"
+                  >
                     <div
                       className="h-40 flex items-center justify-center text-4xl"
-                      style={{ background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }}
+                      style={album.cover_image_url
+                        ? { backgroundImage: `url(${album.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                        : { background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }
+                      }
                     >
-                      🎵
+                      {!album.cover_image_url && '🎵'}
                     </div>
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-white text-sm font-medium">{album.name}</span>
-                        <span className="text-[#00e5ff] text-sm font-semibold">${album.price}</span>
+                        <span className="text-white text-sm font-medium truncate">{album.name}</span>
+                        <span className="text-[#00e5ff] text-sm font-semibold flex-shrink-0 ml-2">${album.price}</span>
                       </div>
-                      <p className="text-[#4a4b5a] text-xs mb-3">
+                      <p className="text-[#4a4b5a] text-xs mb-1">
                         {album.release_date ? `Released ${new Date(album.release_date).getFullYear()}` : 'Unreleased'}
                         {album.genre_names.length > 0 && ` · ${album.genre_names.join(', ')}`}
                       </p>
-                      <button
-                        onClick={() => navigate(`/albums/${album.id}`)}
-                        className="w-full border border-[#2a2b38] text-white text-xs py-2 rounded tracking-widest uppercase hover:border-[#00e5ff] hover:text-[#00e5ff] transition-colors"
-                      >
-                        View Details
-                      </button>
+                      {album.rating != null && (
+                        <p className="text-[#00e5ff] text-xs">★ {album.rating.toFixed(1)}</p>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -118,59 +147,50 @@ export default function ArtistDetailPage() {
           </div>
         </div>
 
-        {/* Right: Metrics + Events */}
+        {/* Right: Real stats */}
         <div className="space-y-4">
           <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5">
-            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-4">Real-Time Metrics</p>
-            <div className="space-y-3 mb-4">
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-[#8a8b9a]">Signal Strength</span>
-                  <span className="text-white">98.4%</span>
-                </div>
-                <div className="h-1 bg-[#1a1b24] rounded-full">
-                  <div className="h-1 bg-[#00e5ff] rounded-full" style={{ width: '98.4%' }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-[#8a8b9a]">Collector Density</span>
-                  <span className="text-white">High</span>
-                </div>
-                <div className="h-1 bg-[#1a1b24] rounded-full">
-                  <div className="h-1 bg-[#aa3bff] rounded-full" style={{ width: '75%' }} />
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-[#2a2b38]">
-              <div>
-                <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Global Rank</p>
-                <p className="text-white text-xl font-bold">#0{(artist.album_count % 9) + 1}</p>
-              </div>
+            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-4">Artist Stats</p>
+            <div className="space-y-4">
               <div>
                 <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Albums</p>
-                <p className="text-white text-xl font-bold">{artist.album_count}</p>
+                <p className="text-white text-2xl font-bold">{artist.album_count}</p>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5">
-            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-4">Upcoming Events</p>
-            <div className="space-y-2">
-              <div className="bg-[#1a1b24] rounded p-3">
-                <p className="text-white text-xs font-medium">Void-Fest Virtual Mainstage</p>
-                <p className="text-[#4a4b5a] text-[10px] mt-0.5">Oct 14 · 23:00 GMT</p>
+              <div>
+                <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Avg Rating</p>
+                {avgRating != null ? (
+                  <div className="flex items-center gap-2">
+                    <p className="text-white text-2xl font-bold">{avgRating.toFixed(1)}</p>
+                    <span className="text-[#00e5ff]">★</span>
+                    <span className="text-[#4a4b5a] text-xs">({ratedAlbums.length} rated)</span>
+                  </div>
+                ) : (
+                  <p className="text-[#4a4b5a] text-sm">No ratings yet</p>
+                )}
               </div>
-              <div className="bg-[#1a1b24] rounded p-3">
-                <p className="text-white text-xs font-medium">Prism Protocol Release Party</p>
-                <p className="text-[#4a4b5a] text-[10px] mt-0.5">Dec 02 · 20:00 GMT</p>
-              </div>
+              {albums && albums.length > 0 && (
+                <div>
+                  <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Catalog Value</p>
+                  <p className="text-white text-2xl font-bold">${totalValue.toFixed(2)}</p>
+                </div>
+              )}
+              {albums && albums.length > 0 && (
+                <div>
+                  <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Rating Distribution</p>
+                  <div className="h-1 bg-[#1a1b24] rounded-full">
+                    <div
+                      className="h-1 bg-[#00e5ff] rounded-full transition-all"
+                      style={{ width: avgRating != null ? `${(avgRating / 5) * 100}%` : '0%' }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {!user && (
             <p className="text-[#4a4b5a] text-xs text-center">
-              <button onClick={() => navigate('/login')} className="text-[#00e5ff] hover:underline">Login</button> to follow and get personalized recommendations
+              <button onClick={() => navigate('/login')} className="text-[#00e5ff] hover:underline">Login</button> to purchase albums from this artist
             </p>
           )}
         </div>

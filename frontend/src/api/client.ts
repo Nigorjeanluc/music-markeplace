@@ -69,6 +69,7 @@ export interface UserResponse {
   id: string
   email: string
   username: string
+  avatar_url: string | null
   is_admin: boolean
   is_active: boolean
   created_at: string
@@ -79,6 +80,7 @@ export interface ArtistResponse {
   real_name: string
   performing_name: string
   date_of_birth: string
+  photo_url: string | null
   created_at: string
   album_count: number
 }
@@ -92,6 +94,7 @@ export interface AlbumResponse {
   artist_name: string
   rating: number | null
   genre_names: string[]
+  cover_image_url: string | null
   created_at: string
   updated_at: string
 }
@@ -121,6 +124,33 @@ export interface GenreResponse {
   description: string | null
   created_at: string
   updated_at: string
+}
+
+export interface TrackResponse {
+  id: string
+  name: string
+  date: string
+  album_id: string
+  created_at: string
+}
+
+export interface TrackInPlaylist {
+  id: string
+  name: string
+  date: string
+  album_name: string
+  artist_name: string
+}
+
+export interface PlaylistResponse {
+  id: string
+  name: string
+  created_at: string
+  track_count: number
+}
+
+export interface PlaylistDetailResponse extends PlaylistResponse {
+  tracks: TrackInPlaylist[]
 }
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
@@ -177,13 +207,60 @@ export const ratingsApi = {
   update: (album_id: string, rating: number) =>
     api.put<RatingResponse>(`/ratings/${album_id}`, { rating }).then(r => r.data),
   myRatings: () => api.get<RatingResponse[]>('/ratings/me').then(r => r.data),
+  albumRatings: (album_id: string) =>
+    api.get<RatingResponse[]>(`/ratings/album/${album_id}`).then(r => r.data),
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────
 
 export const genresApi = {
   list: () => api.get<GenreResponse[]>('/genres/').then(r => r.data),
+  get: (id: string) => api.get<GenreResponse>(`/genres/${id}`).then(r => r.data),
   create: (data: { name: string; description?: string }) =>
     api.post<GenreResponse>('/genres/', data).then(r => r.data),
+  update: (id: string, data: { name?: string; description?: string }) =>
+    api.put<GenreResponse>(`/genres/${id}`, data).then(r => r.data),
   delete: (id: string) => api.delete(`/genres/${id}`),
+}
+
+// ── Tracks ───────────────────────────────────────────────────────────────────
+
+export const tracksApi = {
+  list: (params?: { album_id?: string; search?: string; skip?: number; limit?: number }) =>
+    api.get<TrackResponse[]>('/tracks/', { params }).then(r => r.data),
+  get: (id: string) => api.get<TrackResponse>(`/tracks/${id}`).then(r => r.data),
+  create: (data: { name: string; date: string; album_id: string }) =>
+    api.post<TrackResponse>('/tracks/', data).then(r => r.data),
+  update: (id: string, data: { name?: string; date?: string; album_id?: string }) =>
+    api.put<TrackResponse>(`/tracks/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/tracks/${id}`),
+}
+
+// ── Playlists ─────────────────────────────────────────────────────────────────
+
+export const playlistsApi = {
+  list: () => api.get<PlaylistResponse[]>('/playlists/').then(r => r.data),
+  get: (id: string) => api.get<PlaylistDetailResponse>(`/playlists/${id}`).then(r => r.data),
+  create: (data: { name: string; track_ids?: string[] }) =>
+    api.post<PlaylistDetailResponse>('/playlists/', data).then(r => r.data),
+  update: (id: string, data: { name: string }) =>
+    api.put<PlaylistResponse>(`/playlists/${id}`, data).then(r => r.data),
+  delete: (id: string) => api.delete(`/playlists/${id}`),
+  addTrack: (playlist_id: string, track_id: string) =>
+    api.post(`/playlists/${playlist_id}/tracks`, { track_id }),
+  removeTrack: (playlist_id: string, track_id: string) =>
+    api.delete(`/playlists/${playlist_id}/tracks/${track_id}`),
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────────
+
+export const uploadApi = {
+  image: (file: File, folder = 'images') => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('folder', folder)
+    return api.post<{ url: string }>('/upload/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data)
+  },
 }

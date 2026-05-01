@@ -1,11 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-interface TopbarProps {
-  searchPlaceholder?: string
-}
-
-export default function Topbar({ searchPlaceholder = 'Search the void...' }: TopbarProps) {
+export default function Topbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -40,28 +36,20 @@ export default function Topbar({ searchPlaceholder = 'Search the void...' }: Top
       </nav>
 
       <div className="ml-auto flex items-center gap-3">
-        <div className="flex items-center bg-[#12131a] border border-[#2a2b38] rounded px-3 py-1.5 gap-2 w-52">
-          <span className="text-[#4a4b5a] text-sm">🔍</span>
-          <input
-            className="bg-transparent text-sm text-white placeholder-[#4a4b5a] outline-none w-full"
-            placeholder={searchPlaceholder}
-          />
-        </div>
-        <button className="text-[#8a8b9a] hover:text-white text-lg">🔔</button>
         {user ? (
           <button
             onClick={handleLogout}
             className="w-8 h-8 rounded-full bg-[#1a1b24] border border-[#2a2b38] text-xs text-[#00e5ff] hover:border-[#00e5ff] transition-colors flex items-center justify-center"
             title={`${user.username} (${user.is_admin ? 'admin' : 'user'}) — click to logout`}
           >
-            {user.username[0]}
+            {user.username[0].toUpperCase()}
           </button>
         ) : (
           <button
             onClick={() => navigate('/login')}
-            className="w-8 h-8 rounded-full bg-[#1a1b24] border border-[#2a2b38] text-[#8a8b9a] hover:text-white flex items-center justify-center"
+            className="border border-[#2a2b38] text-[#8a8b9a] text-xs px-3 py-1.5 rounded hover:border-[#00e5ff] hover:text-[#00e5ff] transition-colors"
           >
-            👤
+            Login
           </button>
         )}
       </div>

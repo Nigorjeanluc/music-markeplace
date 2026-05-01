@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useAlbum, usePurchase, useRateAlbum, useLibrary } from '../hooks/useApi'
+import { useAlbum, usePurchase, useRateAlbum, useLibrary, useAlbumTracks } from '../hooks/useApi'
 
 function StarRating({ value, locked, onRate }: { value: number; locked: boolean; onRate?: (v: number) => void }) {
   return (
@@ -24,10 +23,10 @@ export default function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [playing, setPlaying] = useState(false)
 
   const { data: album, isLoading, isError } = useAlbum(id!)
   const { data: library } = useLibrary(!!user)
+  const { data: tracks } = useAlbumTracks(id!)
   const purchase = usePurchase()
   const rateAlbum = useRateAlbum()
 
@@ -75,60 +74,65 @@ export default function AlbumDetailPage() {
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-[#8a8b9a] text-xs tracking-widest uppercase hover:text-white transition-colors mb-6"
       >
-        ← Return to Marketplace
+        ← Return
       </button>
 
       <div className="grid grid-cols-2 gap-8">
-        {/* Left: Cover + Player */}
+        {/* Left: Cover + Tracklist */}
         <div>
           <div
             className="rounded-lg overflow-hidden mb-4 aspect-square flex items-center justify-center text-8xl"
-            style={{ background: 'radial-gradient(circle, #0a1a2e 0%, #0d0e14 100%)' }}
+            style={album.cover_image_url
+              ? { backgroundImage: `url(${album.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { background: 'radial-gradient(circle, #0a1a2e 0%, #0d0e14 100%)' }
+            }
           >
-            🎵
+            {!album.cover_image_url && '🎵'}
           </div>
           <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4">
-            <p className="text-[10px] tracking-widest text-[#00e5ff] uppercase mb-1">Previewing Track</p>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-white font-medium">{album.name}</span>
-              <div className="flex items-center gap-3">
-                <button className="text-[#8a8b9a] hover:text-white text-lg">⏮</button>
-                <button
-                  onClick={() => setPlaying(!playing)}
-                  className="w-9 h-9 rounded-full border border-[#00e5ff] text-[#00e5ff] flex items-center justify-center hover:bg-[#00e5ff]/10 transition-colors"
-                >
-                  {playing ? '⏸' : '▶'}
-                </button>
-                <button className="text-[#8a8b9a] hover:text-white text-lg">⏭</button>
+            <p className="text-[10px] tracking-widest text-[#00e5ff] uppercase mb-3">
+              Tracklist {tracks && tracks.length > 0 && <span className="text-[#4a4b5a]">· {tracks.length} tracks</span>}
+            </p>
+            {!tracks || tracks.length === 0 ? (
+              <p className="text-[#4a4b5a] text-xs">No tracks available.</p>
+            ) : (
+              <div className="space-y-1">
+                {tracks.map((track, i) => (
+                  <div key={track.id} className="flex items-center gap-3 py-1.5 border-b border-[#1a1b24] last:border-0">
+                    <span className="text-[#4a4b5a] text-xs w-5 text-right">{i + 1}</span>
+                    <span className="text-white text-sm flex-1 truncate">{track.name}</span>
+                    <span className="text-[#4a4b5a] text-xs">{new Date(track.date).getFullYear()}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="h-1 bg-[#1a1b24] rounded-full">
-              <div className="h-1 bg-[#00e5ff] rounded-full w-1/3" />
-            </div>
+            )}
           </div>
         </div>
 
         {/* Right: Info + Purchase */}
         <div>
-          <div className="flex gap-2 mb-4">
-            <span className="border border-[#2a2b38] text-[#8a8b9a] text-xs px-3 py-1 rounded tracking-wider">LOSSLESS</span>
-            <span className="border border-[#2a2b38] text-[#8a8b9a] text-xs px-3 py-1 rounded tracking-wider">EXCLUSIVE</span>
-            {album.genre_names.map(g => (
-              <span key={g} className="border border-[#2a2b38] text-[#8a8b9a] text-xs px-3 py-1 rounded tracking-wider">{g}</span>
-            ))}
-          </div>
+          {album.genre_names.length > 0 && (
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {album.genre_names.map(g => (
+                <span key={g} className="border border-[#2a2b38] text-[#8a8b9a] text-xs px-3 py-1 rounded tracking-wider">{g}</span>
+              ))}
+            </div>
+          )}
 
           <h1 className="text-white text-5xl font-black tracking-tight mb-4 uppercase" style={{ textShadow: '0 0 30px #00e5ff44' }}>
             {album.name}
           </h1>
 
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-9 h-9 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center">🎤</div>
-            <div>
-              <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase">Produced By</p>
-              <p className="text-white font-semibold">{album.artist_name}</p>
+          <button
+            onClick={() => navigate(`/artists/${album.artist_id}`)}
+            className="flex items-center gap-3 mb-6 group"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center group-hover:border-[#00e5ff] transition-colors">🎤</div>
+            <div className="text-left">
+              <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase">Artist</p>
+              <p className="text-white font-semibold group-hover:text-[#00e5ff] transition-colors">{album.artist_name}</p>
             </div>
-          </div>
+          </button>
 
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4">
@@ -139,7 +143,7 @@ export default function AlbumDetailPage() {
               </div>
             </div>
             <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4">
-              <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Rating</p>
+              <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Avg Rating</p>
               <div className="flex items-center gap-2">
                 <span className="text-white text-3xl font-bold">{album.rating != null ? album.rating.toFixed(1) : '—'}</span>
                 {album.rating != null && <span className="text-[#00e5ff]">★</span>}
@@ -162,9 +166,11 @@ export default function AlbumDetailPage() {
               >
                 {purchase.isPending ? 'Processing...' : '🛒 Purchase Album'}
               </button>
-              <p className="text-[#4a4b5a] text-xs text-center italic">
-                "Secure your access to high-fidelity audio streams and digital ownership."
-              </p>
+              {!user && (
+                <p className="text-[#4a4b5a] text-xs text-center">
+                  <button onClick={() => navigate('/login')} className="text-[#00e5ff] hover:underline">Login</button> to purchase
+                </p>
+              )}
             </>
           ) : (
             <div className="bg-[#00e5ff]/5 border border-[#00e5ff]/30 rounded-lg p-4 mb-3 text-center">
@@ -175,8 +181,7 @@ export default function AlbumDetailPage() {
 
           {/* Post-purchase rating */}
           <div className={`bg-[#12131a] border border-[#2a2b38] rounded-lg p-5 mt-4 ${!canRate ? 'opacity-50' : ''}`}>
-            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-3">Post-Purchase Rating</p>
-            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Your Score</p>
+            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-3">Your Rating</p>
             <div className="flex items-center gap-3">
               <StarRating value={userRating} locked={!canRate} onRate={canRate ? handleRate : undefined} />
               {!canRate && (
@@ -185,7 +190,7 @@ export default function AlbumDetailPage() {
                   {!user ? (
                     <button onClick={() => navigate('/login')} className="text-[#00e5ff] hover:underline">Login to rate</button>
                   ) : (
-                    'Purchase to Unlock Rating'
+                    'Purchase to unlock'
                   )}
                 </div>
               )}
@@ -194,25 +199,19 @@ export default function AlbumDetailPage() {
           </div>
 
           {/* Metadata */}
-          <div className="grid grid-cols-2 gap-3 mt-4 text-xs text-[#8a8b9a]">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-xs text-[#8a8b9a]">
             {album.release_date && (
               <div className="flex items-center gap-2">
                 <span className="text-[#4a4b5a]">🕐</span>
-                Released: {new Date(album.release_date).toLocaleDateString()}
+                Released {new Date(album.release_date).toLocaleDateString()}
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-[#4a4b5a]">🎵</span>
-              Genres: {album.genre_names.join(', ') || 'N/A'}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#4a4b5a]">📊</span>
-              BPM: 128
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#4a4b5a]">🎹</span>
-              Key: C Minor
-            </div>
+            {tracks && tracks.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[#4a4b5a]">📀</span>
+                {tracks.length} track{tracks.length !== 1 ? 's' : ''}
+              </div>
+            )}
           </div>
         </div>
       </div>

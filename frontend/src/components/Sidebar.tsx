@@ -4,10 +4,9 @@ import Logo from './Logo'
 
 const navItems = [
   { to: '/', label: 'Marketplace', icon: '◎' },
-  { to: '/library', label: 'Library', icon: '▦' },
+  { to: '/library', label: 'Library', icon: '▦', authRequired: true },
   { to: '/artists', label: 'Artists', icon: '👤' },
   { to: '/management', label: 'Management', icon: '⊞', adminOnly: true },
-  { to: '/settings', label: 'Settings', icon: '⚙' },
 ]
 
 export default function Sidebar() {
@@ -23,8 +22,9 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 px-2">
-        {navItems.map(({ to, label, icon, adminOnly }) => {
+        {navItems.map(({ to, label, icon, adminOnly, authRequired }) => {
           if (adminOnly && !isAdmin) return null
+          if (authRequired && !user) return null
           return (
             <NavLink
               key={to}
@@ -45,13 +45,16 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {user && (
-        <div className="p-4">
-          <button className="w-full border border-[#2a2b38] text-white text-xs py-2.5 px-4 rounded hover:border-[#00e5ff] hover:text-[#00e5ff] transition-colors">
-            {user.is_admin ? '+ Upload Track' : 'Upload Track'}
-          </button>
-        </div>
-      )}
+      <div className="p-4 border-t border-[#2a2b38]">
+        {user ? (
+          <div className="text-center">
+            <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1 truncate">{user.username}</p>
+            <p className="text-[10px] text-[#00e5ff]">{user.is_admin ? 'Admin' : 'Member'}</p>
+          </div>
+        ) : (
+          <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase text-center">Not logged in</p>
+        )}
+      </div>
     </aside>
   )
 }
