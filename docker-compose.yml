@@ -2,40 +2,59 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:15-alpine
-    container_name: postgres_db
-    restart: always
+    image: postgres:16-alpine
+    container_name: music_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app123
-      POSTGRES_DB: app_db
+      POSTGRES_USER: musicapp
+      POSTGRES_PASSWORD: musicapp123
+      POSTGRES_DB: musicdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musicapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
-    container_name: fastapi_app
+    container_name: music_backend
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://musicapp:musicapp123@db:5432/musicdb
+      DATABASE_URL_TEST: postgresql://musicapp:musicapp123@db:5432/musicdb_test
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
     command: >
       sh -c "
         alembic upgrade head &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
-    ports:
-      - "8000:8000"
 
   frontend:
     build: ./frontend
-    container_name: react_app
+    container_name: music_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:8000
+    command: yarn dev --host
 
-# volumes:
-#   postgres_data:
+volumes:
+  postgres_data:
