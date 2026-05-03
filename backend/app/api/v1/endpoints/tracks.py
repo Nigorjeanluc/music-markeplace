@@ -6,22 +6,24 @@ from app.db.session import get_db
 from app.core.security import get_current_admin_user
 from app.services.track_service import TrackService
 from app.schemas.track import TrackCreate, TrackUpdate, TrackResponse
+from app.schemas.pagination import PaginatedResponse
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[TrackResponse])
+@router.get("/", response_model=PaginatedResponse[TrackResponse])
 def list_tracks(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     album_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """List tracks with optional filters (public endpoint)."""
     track_service = TrackService(db)
-    tracks = track_service.get_tracks(skip=skip, limit=limit, album_id=album_id, search=search)
-    return [
+    tracks, total = track_service.get_tracks(page=page, page_size=page_size, album_id=album_id, search=search)
+    
+    items = [
         TrackResponse(
             id=str(t.id),
             name=t.name,
@@ -31,6 +33,14 @@ def list_tracks(
         )
         for t in tracks
     ]
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{track_id}", response_model=TrackResponse)

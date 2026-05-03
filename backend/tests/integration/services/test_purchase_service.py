@@ -71,7 +71,7 @@ class TestPurchaseServiceGetUserPurchases:
         purchase_s.create_purchase(str(normal_user.id), PurchaseCreate(album_id=str(album.id)))
 
         # Get purchases
-        purchases = purchase_s.get_user_purchases(str(normal_user.id))
-        assert len(purchases) >= 1
+        result, total = purchase_s.get_user_purchases(str(normal_user.id))
+        assert total >= 1
         # Each element is (purchase, album, artist, user_rating, avg_rating)
-        assert purchases[0][1] is not None  # album exists
+        assert result[0][1] is not None  # album exists

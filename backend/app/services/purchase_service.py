@@ -38,11 +38,16 @@ class PurchaseService:
         self.db.refresh(purchase)
         return purchase
 
-    def get_user_purchases(self, user_id: str) -> List[Tuple[Purchase, Album, Optional[Artist], Optional[float], Optional[float]]]:
-        """Get all purchases for a user with album, artist, user rating, and avg rating."""
+    def get_user_purchases(
+        self, user_id: str, page: int = 1, page_size: int = 20
+    ) -> Tuple[List[Tuple[Purchase, Album, Optional[Artist], Optional[float], Optional[float]]], int]:
+        """Get all purchases for a user with album, artist, user rating, and avg rating. With pagination."""
         if not is_valid_uuid(user_id):
-            return []
-        purchases = self.db.query(Purchase).filter(Purchase.user_id == user_id).all()
+            return ([], 0)
+        query = self.db.query(Purchase).filter(Purchase.user_id == user_id)
+        total = query.count()
+        skip = (page - 1) * page_size
+        purchases = query.offset(skip).limit(page_size).all()
 
         result = []
         for purchase in purchases:
@@ -63,7 +68,7 @@ class PurchaseService:
             ).scalar()
 
             result.append((purchase, album, artist, user_rating, avg_rating))
-        return result
+        return (result, total)
 
     def build_purchase_response(self, purchase: Purchase, album: Album, artist: Optional[Artist]) -> PurchaseResponse:
         """Build PurchaseResponse from purchase, album, and artist."""

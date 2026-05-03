@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
 from typing import List
-
+from pathlib import Path
 
 class Settings(BaseSettings):
     # Database
@@ -13,18 +13,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
+
     # Environment
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
-    
+
     # URLs
     FRONTEND_URL: str | None = None
     BACKEND_URL: str | None = None
-    
+
     # CORS
     ALLOWED_ORIGINS: List[str] = []  # This will be populated from the .env file as a comma-separated list
-    
+
     # Project
     PROJECT_NAME: str = "Music Marketplace API"
     VERSION: str = "1.0.0"
@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     AWS_S3_CUSTOM_DOMAIN: str | None = None  # Optional CDN like CloudFront
     AWS_S3_REGION: str = "us-east-1"
 
-    model_config = ConfigDict(env_file=".env", case_sensitive=True)
-
+    model_config = ConfigDict(env_file=Path(__file__).parent.parent / ".env", case_sensitive=True)
 
 settings = Settings()

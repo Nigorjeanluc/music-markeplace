@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.album import Album
 from app.services.rating_service import RatingService
 from app.schemas.rating import RatingCreate, RatingUpdate, RatingResponse
+from app.schemas.pagination import PaginatedResponse
 
 router = APIRouter()
 
@@ -82,36 +83,53 @@ def update_rating(
     return rating_service.build_rating_response(rating_obj, album.name if album else "", avg_rating)
 
 
-@router.get("/me", response_model=List[RatingResponse])
+@router.get("/me", response_model=PaginatedResponse[RatingResponse])
 def get_my_ratings(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """Get current user's ratings."""
     rating_service = RatingService(db)
-    ratings_data = rating_service.get_user_ratings(current_user.id)
+    ratings_data, total = rating_service.get_user_ratings(current_user.id, page=page, page_size=page_size)
 
-    return [
+    items = [
         rating_service.build_rating_response(r, a.name if a else "", avg)
         for r, a, avg in ratings_data
     ]
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 
-@router.get("/album/{album_id}", response_model=List[RatingResponse])
+@router.get("/album/{album_id}", response_model=PaginatedResponse[RatingResponse])
 def get_album_ratings(
     album_id: str,
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     """Get all ratings for an album + average (public endpoint). Supports pagination."""
     rating_service = RatingService(db)
-    result = rating_service.get_album_ratings(album_id, skip=skip, limit=limit)
+    result = rating_service.get_album_ratings(album_id, page=page, page_size=page_size)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Album not found"
         )
 
-    rating_responses, _ = result
-    return rating_responses
+    rating_responses, avg_rating, total = result
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=rating_responses,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )

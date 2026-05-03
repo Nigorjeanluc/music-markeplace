@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: musicdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U musicapp"]
       interval: 10s
@@ -32,7 +34,8 @@ services:
       ENVIRONMENT: development
       DEBUG: "True"
     ports:
-      - "8000:8000"
+      # Host port 8001 avoids conflict with local dev on 8000
+      - "8001:8000"
     volumes:
       - ./backend:/app
     command: >
@@ -49,13 +52,15 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:5173"
+      # Host port 5174 avoids conflict with local dev on 5173
+      - "5174:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     working_dir: /app
     environment:
-      - VITE_API_URL=http://localhost:8000
+      # Points to backend as accessed from the browser (host machine)
+      - VITE_API_URL=http://localhost:8001
     command: sh -c "yarn install && yarn dev --host"
 
 volumes:

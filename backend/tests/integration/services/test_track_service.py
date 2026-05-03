@@ -45,8 +45,8 @@ class TestTrackServiceGetTracks:
         track_service = TrackService(db_session)
         track_service.create_track(TrackCreate(name="Track1", date=date(2023, 1, 1), album_id=str(album.id)))
 
-        tracks = track_service.get_tracks()
-        assert len(tracks) >= 1
+        result, total = track_service.get_tracks()
+        assert total >= 1
 
     def test_filter_by_album(self, db_session):
         artist_service = ArtistService(db_session)
@@ -60,9 +60,9 @@ class TestTrackServiceGetTracks:
         track_service.create_track(TrackCreate(name="T1", date=date(2023, 1, 1), album_id=str(album1.id)))
         track_service.create_track(TrackCreate(name="T2", date=date(2023, 1, 2), album_id=str(album2.id)))
 
-        tracks = track_service.get_tracks(album_id=str(album1.id))
-        assert len(tracks) == 1
-        assert tracks[0].album_id == album1.id
+        result, total = track_service.get_tracks(album_id=str(album1.id))
+        assert total == 1
+        assert result[0].album_id == album1.id
 
 
 class TestTrackServiceGetTrack:

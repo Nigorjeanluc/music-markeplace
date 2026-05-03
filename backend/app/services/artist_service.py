@@ -22,22 +22,24 @@ class ArtistService:
 
     def get_artists(
         self,
-        skip: int = 0,
-        limit: int = 100,
+        page: int = 1,
+        page_size: int = 20,
         search: Optional[str] = None
-    ) -> List[Tuple[Artist, int]]:
-        """Get artists with optional search, returning tuples of (artist, album_count)."""
+    ) -> Tuple[List[Tuple[Artist, int]], int]:
+        """Get artists with optional search. Returns (artists_with_counts, total_count)."""
         query = self.db.query(Artist)
         if search:
             query = query.filter(Artist.performing_name.ilike(f"%{search}%"))
-        artists = query.offset(skip).limit(limit).all()
+        total = query.count()
+        skip = (page - 1) * page_size
+        artists = query.offset(skip).limit(page_size).all()
 
         # Add album_count to each artist
         result = []
         for artist in artists:
             album_count = self.db.query(Album).filter(Album.artist_id == artist.id).count()
             result.append((artist, album_count))
-        return result
+        return (result, total)
 
     def get_artist(self, artist_id: str) -> Optional[Tuple[Artist, int]]:
         """Get artist detail with album count, returning tuple of (artist, album_count)."""

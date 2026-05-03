@@ -11,6 +11,7 @@ import {
 } from '../hooks/useApi'
 import type { ArtistResponse, AlbumResponse, GenreResponse, TrackResponse } from '../api/client'
 import { FormField, SelectField } from '../components/FormField'
+import Pagination from '../components/Pagination'
 
 const artistSchema = Yup.object({
   real_name: Yup.string().min(2, 'Min 2 chars').required('Required'),
@@ -92,7 +93,8 @@ function ArtistModal({ artist, onClose }: { artist?: ArtistResponse; onClose: ()
 function AlbumModal({ album, onClose }: { album?: AlbumResponse; onClose: () => void }) {
   const createAlbum = useCreateAlbum()
   const updateAlbum = useUpdateAlbum()
-  const { data: artists } = useArtists()
+  const { data: artistsData } = useArtists({ page_size: 1000 })
+  const artists = artistsData?.items ?? []
   const { data: genres } = useGenres()
   const [apiError, setApiError] = useState('')
 
@@ -230,7 +232,8 @@ function GenreModal({ genre, onClose }: { genre?: GenreResponse; onClose: () => 
 function TrackModal({ track, onClose }: { track?: TrackResponse; onClose: () => void }) {
   const createTrack = useCreateTrack()
   const updateTrack = useUpdateTrack()
-  const { data: albums } = useAlbums()
+  const { data: albumsData } = useAlbums({ page_size: 1000 })
+  const albums = albumsData?.items ?? []
   const [apiError, setApiError] = useState('')
 
   return (
@@ -264,7 +267,7 @@ function TrackModal({ track, onClose }: { track?: TrackResponse; onClose: () => 
             <FormField name="date" label="Release Date" type="date" />
             <SelectField name="album_id" label="Album">
               <option value="">Select album...</option>
-              {albums?.map(a => <option key={a.id} value={a.id}>{a.name} — {a.artist_name}</option>)}
+              {albums.map(a => <option key={a.id} value={a.id}>{a.name} — {a.artist_name}</option>)}
             </SelectField>
             {apiError && <p className="text-red-400 text-xs">{apiError}</p>}
             <div className="flex gap-3 pt-2">
@@ -283,14 +286,20 @@ function TrackModal({ track, onClose }: { track?: TrackResponse; onClose: () => 
 export default function ManagementPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: artists, isLoading: artistsLoading } = useArtists()
-  const { data: albums, isLoading: albumsLoading } = useAlbums()
+  const [artistsPage, setArtistsPage] = useState(1)
+  const [albumsPage, setAlbumsPage] = useState(1)
+  const [tracksPage, setTracksPage] = useState(1)
+  const { data: artistsData, isLoading: artistsLoading } = useArtists({ page: artistsPage, page_size: 10 })
+  const { data: albumsData, isLoading: albumsLoading } = useAlbums({ page: albumsPage, page_size: 10 })
   const { data: genres, isLoading: genresLoading } = useGenres()
-  const { data: tracks, isLoading: tracksLoading } = useTracks()
+  const { data: tracksData, isLoading: tracksLoading } = useTracks({ page: tracksPage, page_size: 10 })
   const deleteArtist = useDeleteArtist()
   const deleteAlbum = useDeleteAlbum()
   const deleteGenre = useDeleteGenre()
   const deleteTrack = useDeleteTrack()
+  const artists = artistsData?.items ?? []
+  const albums = albumsData?.items ?? []
+  const tracks = tracksData?.items ?? []
 
   const [artistModal, setArtistModal] = useState<{ open: boolean; artist?: ArtistResponse }>({ open: false })
   const [albumModal, setAlbumModal] = useState<{ open: boolean; album?: AlbumResponse }>({ open: false })
@@ -310,10 +319,10 @@ export default function ManagementPage() {
   }
 
   const stats = [
-    { label: 'Total Artists', value: artistsLoading ? '…' : String(artists?.length ?? 0), change: '+12%', icon: '👤' },
-    { label: 'Total Albums', value: albumsLoading ? '…' : String(albums?.length ?? 0), change: '+5.4%', icon: '◎' },
+    { label: 'Total Artists', value: artistsLoading ? '…' : String(artistsData?.total ?? artists.length), change: '+12%', icon: '👤' },
+    { label: 'Total Albums', value: albumsLoading ? '…' : String(albumsData?.total ?? albums.length), change: '+5.4%', icon: '◎' },
     { label: 'Total Genres', value: genresLoading ? '…' : String(genres?.length ?? 0), change: '', icon: '🎶' },
-    { label: 'Total Tracks', value: tracksLoading ? '…' : String(tracks?.length ?? 0), change: '', icon: '📀' },
+    { label: 'Total Tracks', value: tracksLoading ? '…' : String(tracksData?.total ?? tracks.length), change: '', icon: '📀' },
   ]
 
   return (
@@ -369,10 +378,10 @@ export default function ManagementPage() {
 
           {artistsLoading ? (
             <div className="px-5 py-8 text-center text-[#4a4b5a] text-sm animate-pulse">Loading...</div>
-          ) : artists?.length === 0 ? (
+          ) : artists.length === 0 ? (
             <div className="px-5 py-8 text-center text-[#4a4b5a] text-sm">No artists yet. Add one above.</div>
           ) : (
-            artists?.map((a, i) => (
+            artists.map((a, i) => (
               <div key={a.id} className="grid grid-cols-6 gap-4 px-5 py-4 border-b border-[#2a2b38] last:border-0 items-center hover:bg-[#1a1b24] transition-colors">
                 <div className="col-span-2 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-[#1a1b24] border border-[#2a2b38] flex items-center justify-center text-sm">🎤</div>
@@ -402,6 +411,16 @@ export default function ManagementPage() {
             ))
           )}
         </div>
+
+        {!artistsLoading && artistsData && artistsData.total_pages > 1 && (
+          <div className="px-5 py-4 border-t border-[#2a2b38]">
+            <Pagination
+              page={artistsData.page}
+              totalPages={artistsData.total_pages}
+              onPageChange={setArtistsPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* Manage Albums */}
@@ -421,11 +440,11 @@ export default function ManagementPage() {
 
         {albumsLoading ? (
           <div className="text-center text-[#4a4b5a] text-sm py-8 animate-pulse">Loading...</div>
-        ) : albums?.length === 0 ? (
+        ) : albums.length === 0 ? (
           <div className="text-center text-[#4a4b5a] text-sm py-8">No albums yet. Add one above.</div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
-            {albums?.map((album, i) => (
+            {albums.map((album, i) => (
               <div key={album.id} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4 flex items-center gap-4 hover:border-[#2a2b38]/80 transition-colors">
                 <div
                   className="w-16 h-16 rounded flex items-center justify-center text-2xl flex-shrink-0"
@@ -452,6 +471,16 @@ export default function ManagementPage() {
                 </div>
               </div>
             ))}
+
+        {!albumsLoading && albumsData && albumsData.total_pages > 1 && (
+          <div className="mt-4">
+            <Pagination
+              page={albumsData.page}
+              totalPages={albumsData.total_pages}
+              onPageChange={setAlbumsPage}
+            />
+          </div>
+        )}
           </div>
         )}
       </div>
@@ -518,11 +547,11 @@ export default function ManagementPage() {
           </div>
           {tracksLoading ? (
             <div className="px-5 py-8 text-center text-[#4a4b5a] text-sm animate-pulse">Loading...</div>
-          ) : tracks?.length === 0 ? (
+          ) : tracks.length === 0 ? (
             <div className="px-5 py-8 text-center text-[#4a4b5a] text-sm">No tracks yet. Add one above.</div>
           ) : (
-            tracks?.map(t => {
-              const album = albums?.find(a => a.id === t.album_id)
+            tracks.map(t => {
+              const album = albums.find(a => a.id === t.album_id)
               return (
                 <div key={t.id} className="grid grid-cols-5 gap-4 px-5 py-3 border-b border-[#2a2b38] last:border-0 items-center hover:bg-[#1a1b24] transition-colors">
                   <div className="col-span-2 flex items-center gap-2">
@@ -543,6 +572,16 @@ export default function ManagementPage() {
             })
           )}
         </div>
+
+        {!tracksLoading && tracksData && tracksData.total_pages > 1 && (
+          <div className="px-5 py-4 border-t border-[#2a2b38]">
+            <Pagination
+              page={tracksData.page}
+              totalPages={tracksData.total_pages}
+              onPageChange={setTracksPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

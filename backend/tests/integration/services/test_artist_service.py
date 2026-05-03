@@ -28,18 +28,18 @@ class TestArtistServiceGetArtists:
         service.create_artist(ArtistCreate(real_name="A1", performing_name="Artist1", date_of_birth=date.today()))
         service.create_artist(ArtistCreate(real_name="A2", performing_name="Artist2", date_of_birth=date.today()))
 
-        artists = service.get_artists()
-        assert len(artists) >= 2
+        result, total = service.get_artists()
+        assert total >= 2
         # Each element is (artist, album_count)
-        assert artists[0][1] >= 0  # album_count is present
+        assert result[0][1] >= 0  # album_count is present
 
     def test_search(self, db_session):
         service = ArtistService(db_session)
         service.create_artist(ArtistCreate(real_name="Search Me", performing_name="SearchUnique", date_of_birth=date.today()))
 
-        artists = service.get_artists(search="SearchUnique")
-        assert len(artists) == 1
-        assert artists[0][0].performing_name == "SearchUnique"
+        result, total = service.get_artists(search="SearchUnique")
+        assert total == 1
+        assert result[0][0].performing_name == "SearchUnique"
 
 
 class TestArtistServiceGetArtist:

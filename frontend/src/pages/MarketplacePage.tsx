@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAlbums, useArtists, useGenres } from '../hooks/useApi'
+import Pagination from '../components/Pagination'
 
 const ALBUM_COLORS = ['#1a0a2e', '#0a1a2e', '#0a2e1a', '#1a1a0a', '#2e0a1a', '#0a0a2e']
+const PAGE_SIZE = 12
 
 function StarRating({ value }: { value: number }) {
   return (
@@ -31,21 +33,25 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState('')
   const [submitted, setSubmitted] = useState('')
   const [activeGenre, setActiveGenre] = useState<string | undefined>()
+  const [page, setPage] = useState(1)
 
-  const { data: albums, isLoading: albumsLoading, isError: albumsError } = useAlbums(
-    submitted || activeGenre ? { search: submitted || undefined, genre: activeGenre } : undefined
+  const { data: albumsData, isLoading: albumsLoading, isError: albumsError } = useAlbums(
+    submitted || activeGenre
+      ? { search: submitted || undefined, genre: activeGenre, page, page_size: PAGE_SIZE }
+      : { page, page_size: PAGE_SIZE }
   )
   const { data: artists, isLoading: artistsLoading } = useArtists()
   const { data: genres } = useGenres()
 
   const isFiltered = !!submitted || !!activeGenre
-  const displayAlbums = isFiltered ? (albums ?? []) : (albums?.slice(0, 8) ?? [])
+  const displayAlbums = isFiltered ? (albumsData?.items ?? []) : (albumsData?.items?.slice(0, 8) ?? [])
   const spotlightArtists = artists?.slice(0, 3) ?? []
 
   const clearFilters = () => {
     setSearch('')
     setSubmitted('')
     setActiveGenre(undefined)
+    setPage(1)
   }
 
   return (
@@ -166,6 +172,17 @@ export default function MarketplacePage() {
               ))
           }
         </div>
+
+
+        {!albumsLoading && albumsData && albumsData.total_pages > 1 && (
+          <div className="mb-10">
+            <Pagination
+              page={albumsData.page}
+              totalPages={albumsData.total_pages}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
 
         {/* Spotlight Artists */}
         {!isFiltered && (

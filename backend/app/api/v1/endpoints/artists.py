@@ -6,23 +6,24 @@ from app.db.session import get_db
 from app.core.security import get_current_admin_user
 from app.services.artist_service import ArtistService
 from app.schemas.artist import ArtistCreate, ArtistUpdate, ArtistResponse
+from app.schemas.pagination import PaginatedResponse
 from app.models.album import Album
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ArtistResponse])
+@router.get("/", response_model=PaginatedResponse[ArtistResponse])
 def list_artists(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """List artists with optional search."""
     artist_service = ArtistService(db)
-    artists_data = artist_service.get_artists(skip=skip, limit=limit, search=search)
+    artists_data, total = artist_service.get_artists(page=page, page_size=page_size, search=search)
 
-    result = []
+    items = []
     for artist, album_count in artists_data:
         artist_data = ArtistResponse(
             id=str(artist.id),
@@ -33,8 +34,15 @@ def list_artists(
             created_at=artist.created_at,
             album_count=album_count
         )
-        result.append(artist_data)
-    return result
+        items.append(artist_data)
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{artist_id}", response_model=ArtistResponse)

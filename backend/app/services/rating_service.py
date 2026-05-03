@@ -95,41 +95,38 @@ class RatingService:
         avg_rating = self._get_avg_rating(album_id)
         return (rating_obj, avg_rating)
 
-    def get_user_ratings(self, user_id: str, skip: int = 0, limit: int = 100) -> List[Tuple[Rating, str, Optional[float]]]:
-        """Get all ratings by a user with album name and avg rating. Supports pagination."""
+    def get_user_ratings(
+        self, user_id: str, page: int = 1, page_size: int = 20
+    ) -> Tuple[List[Tuple[Rating, str, Optional[float]]], int]:
+        """Get all ratings by a user with album name and avg rating. With pagination."""
         if not is_valid_uuid(user_id):
-            return []
-        ratings = (
-            self.db.query(Rating)
-            .filter(Rating.user_id == user_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+            return ([], 0)
+        query = self.db.query(Rating).filter(Rating.user_id == user_id)
+        total = query.count()
+        skip = (page - 1) * page_size
+        ratings = query.offset(skip).limit(page_size).all()
 
         result = []
         for r in ratings:
             album = self.db.query(Album).filter(Album.id == r.album_id).first()
             album_name = album.name if album else "Unknown"
-            avg_rating = self._get_avg_rating(str(r.album_id))
+            avg_rating = self._get_avg_rating(r.album_id)
             result.append((r, album_name, avg_rating))
-        return result
-
-    def get_album_ratings(self, album_id: str, skip: int = 0, limit: int = 100) -> Optional[Tuple[List[RatingResponse], Optional[float]]]:
-        """Get all ratings for an album with pagination. Returns (ratings, avg_rating) or None if album not found."""
+        return (result, total)
+    def get_album_ratings(
+        self, album_id: str, page: int = 1, page_size: int = 20
+    ) -> Optional[Tuple[List[RatingResponse], Optional[float], int]]:
+        """Get all ratings for an album with pagination. Returns (ratings, avg_rating, total) or None."""
         if not is_valid_uuid(album_id):
             return None
         album = self.db.query(Album).filter(Album.id == album_id).first()
         if not album:
             return None
 
-        ratings = (
-            self.db.query(Rating)
-            .filter(Rating.album_id == album_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        query = self.db.query(Rating).filter(Rating.album_id == album_id)
+        total = query.count()
+        skip = (page - 1) * page_size
+        ratings = query.offset(skip).limit(page_size).all()
 
         avg_rating = self._get_avg_rating(album_id)
 
@@ -144,8 +141,7 @@ class RatingService:
             for r in ratings
         ]
 
-        return (rating_responses, avg_rating)
-
+        return (rating_responses, avg_rating, total)
     def build_rating_response(
         self, rating: Rating, album_name: str, avg_rating: Optional[float]
     ) -> RatingResponse:

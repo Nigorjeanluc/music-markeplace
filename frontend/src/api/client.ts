@@ -57,6 +57,16 @@ api.interceptors.response.use(
   }
 )
 
+// ── Pagination ──────────────────────────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface TokenResponse {
@@ -168,8 +178,8 @@ export const authApi = {
 // ── Artists ──────────────────────────────────────────────────────────────────
 
 export const artistsApi = {
-  list: (params?: { search?: string; skip?: number; limit?: number }) =>
-    api.get<ArtistResponse[]>('/artists/', { params }).then(r => r.data),
+  list: (params?: { search?: string; page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<ArtistResponse>>('/artists/', { params }).then(r => r.data),
   get: (id: string) => api.get<ArtistResponse>(`/artists/${id}`).then(r => r.data),
   create: (data: { real_name: string; performing_name: string; date_of_birth: string }) =>
     api.post<ArtistResponse>('/artists/', data).then(r => r.data),
@@ -181,8 +191,8 @@ export const artistsApi = {
 // ── Albums ───────────────────────────────────────────────────────────────────
 
 export const albumsApi = {
-  list: (params?: { search?: string; artist_id?: string; genre?: string; skip?: number; limit?: number }) =>
-    api.get<AlbumResponse[]>('/albums/', { params }).then(r => r.data),
+  list: (params?: { search?: string; artist_id?: string; genre?: string; page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<AlbumResponse>>('/albums/', { params }).then(r => r.data),
   get: (id: string) => api.get<AlbumResponse>(`/albums/${id}`).then(r => r.data),
   create: (data: { name: string; price: number; artist_id: string; genre_ids: string[]; release_date?: string }) =>
     api.post<AlbumResponse>('/albums/', data).then(r => r.data),
@@ -196,7 +206,8 @@ export const albumsApi = {
 export const purchasesApi = {
   purchase: (album_id: string) =>
     api.post<PurchaseResponse>('/purchases/', { album_id }).then(r => r.data),
-  library: () => api.get<PurchaseResponse[]>('/purchases/me/library').then(r => r.data),
+  library: (params?: { page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<PurchaseResponse>>('/purchases/me/library', { params }).then(r => r.data),
 }
 
 // ── Ratings ──────────────────────────────────────────────────────────────────
@@ -206,9 +217,10 @@ export const ratingsApi = {
     api.post<RatingResponse>('/ratings/', { album_id, rating }).then(r => r.data),
   update: (album_id: string, rating: number) =>
     api.put<RatingResponse>(`/ratings/${album_id}`, { rating }).then(r => r.data),
-  myRatings: () => api.get<RatingResponse[]>('/ratings/me').then(r => r.data),
-  albumRatings: (album_id: string) =>
-    api.get<RatingResponse[]>(`/ratings/album/${album_id}`).then(r => r.data),
+  myRatings: (params?: { page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<RatingResponse>>('/ratings/me', { params }).then(r => r.data),
+  albumRatings: (album_id: string, params?: { page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<RatingResponse>>(`/ratings/album/${album_id}`, { params }).then(r => r.data),
 }
 
 // ── Genres ───────────────────────────────────────────────────────────────────
@@ -226,8 +238,8 @@ export const genresApi = {
 // ── Tracks ───────────────────────────────────────────────────────────────────
 
 export const tracksApi = {
-  list: (params?: { album_id?: string; search?: string; skip?: number; limit?: number }) =>
-    api.get<TrackResponse[]>('/tracks/', { params }).then(r => r.data),
+  list: (params?: { album_id?: string; search?: string; page?: number; page_size?: number }) =>
+    api.get<PaginatedResponse<TrackResponse>>('/tracks/', { params }).then(r => r.data),
   get: (id: string) => api.get<TrackResponse>(`/tracks/${id}`).then(r => r.data),
   create: (data: { name: string; date: string; album_id: string }) =>
     api.post<TrackResponse>('/tracks/', data).then(r => r.data),

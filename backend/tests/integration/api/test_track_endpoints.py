@@ -8,11 +8,15 @@ class TestListTracks:
     def test_public_access(self, client):
         response = client.get("/api/v1/tracks/")
         assert response.status_code == 200
-        assert isinstance(response.json(), list)
+        data = response.json()
+        assert "items" in data
+        assert isinstance(data["items"], list)
 
     def test_filter_by_album(self, client):
         response = client.get(f"/api/v1/tracks/?album_id={DUMMY_UUID}")
         assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
 
 
 class TestGetTrack:

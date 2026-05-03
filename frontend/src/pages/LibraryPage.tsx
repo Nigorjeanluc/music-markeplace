@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useLibrary, useRateAlbum } from '../hooks/useApi'
 import type { PurchaseResponse } from '../api/client'
+import Pagination from '../components/Pagination'
 
 const RARITY_MAP: Record<number, { label: string; cls: string }> = {
   5: { label: 'LEGENDARY', cls: 'border-[#aa3bff] text-[#aa3bff]' },
@@ -40,8 +42,10 @@ function StarRating({ value, onRate }: { value: number; onRate?: (v: number) => 
 export default function LibraryPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: library, isLoading, isError } = useLibrary(!!user)
+  const [page, setPage] = useState(1)
+  const { data: libraryData, isLoading, isError } = useLibrary(!!user, { page, page_size: 12 })
   const rateAlbum = useRateAlbum()
+  const library = libraryData?.items ?? []
 
   if (!user) {
     return (
@@ -55,8 +59,8 @@ export default function LibraryPage() {
     )
   }
 
-  const totalValue = library?.reduce((s, p) => s + p.amount_paid, 0) ?? 0
-  const unrated = library?.filter(p => !p.user_rating).length ?? 0
+  const totalValue = library.reduce((s, p) => s + p.amount_paid, 0)
+  const unrated = library.filter(p => !p.user_rating).length
 
   return (
     <div className="px-8 py-8">
@@ -73,13 +77,13 @@ export default function LibraryPage() {
             <span className="text-white text-3xl font-bold">${totalValue.toFixed(2)}</span>
           </div>
           <div className="h-1 bg-[#1a1b24] rounded-full">
-            <div className="h-1 bg-[#00e5ff] rounded-full" style={{ width: `${Math.min(100, (library?.length ?? 0) * 10)}%` }} />
+            <div className="h-1 bg-[#00e5ff] rounded-full" style={{ width: `${Math.min(100, (libraryData?.total ?? 0) * 10)}%` }} />
           </div>
         </div>
         <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5 flex items-start justify-between">
           <div>
             <p className="text-[10px] tracking-widest text-[#aa3bff] uppercase mb-3">Total Albums</p>
-            <span className="text-white text-3xl font-bold">{library?.length ?? 0}</span>
+            <span className="text-white text-3xl font-bold">{libraryData?.total ?? library.length}</span>
           </div>
           <span className="text-[#2a2b38] text-3xl mt-1">🗄</span>
         </div>
@@ -110,7 +114,7 @@ export default function LibraryPage() {
             </div>
           ))}
         </div>
-      ) : library?.length === 0 ? (
+      ) : library.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-[#4a4b5a] text-lg mb-2">Your vault is empty</p>
           <p className="text-[#4a4b5a] text-sm mb-4">Browse the marketplace and purchase albums to fill your library.</p>
@@ -119,36 +123,47 @@ export default function LibraryPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-4">
-          {library?.map((purchase, i) => {
-            const rarity = getRarity(purchase)
-            return (
-              <div key={purchase.id} className="bg-[#12131a] border border-[#2a2b38] rounded-lg overflow-hidden hover:border-[#00e5ff]/30 transition-colors">
-                <div
-                  className="h-44 flex items-center justify-center text-4xl cursor-pointer"
-                  style={{ background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }}
-                  onClick={() => navigate(`/albums/${purchase.album_id}`)}
-                >
-                  🎵
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <span className="text-white text-sm font-medium">{purchase.album_name}</span>
-                    <span className={`border text-[9px] px-1.5 py-0.5 rounded tracking-wider ${rarity.cls}`}>{rarity.label}</span>
+        <>
+          <div className="grid grid-cols-4 gap-4">
+            {library.map((purchase, i) => {
+              const rarity = getRarity(purchase)
+              return (
+                <div key={purchase.id} className="bg-[#12131a] border border-[#2a2b38] rounded-lg overflow-hidden hover:border-[#00e5ff]/30 transition-colors">
+                  <div
+                    className="h-44 flex items-center justify-center text-4xl cursor-pointer"
+                    style={{ background: `radial-gradient(circle, ${ALBUM_COLORS[i % ALBUM_COLORS.length]} 0%, #0d0e14 100%)` }}
+                    onClick={() => navigate(`/albums/${purchase.album_id}`)}
+                  >
+                    🎵
                   </div>
-                  <p className="text-[#4a4b5a] text-xs mb-3">{purchase.artist_name}</p>
-                  <p className={`text-[10px] tracking-widest uppercase mb-1 ${purchase.user_rating ? 'text-[#00e5ff]' : 'text-[#4a4b5a]'}`}>
-                    {purchase.user_rating ? 'Your Rating' : 'Rate This Album'}
-                  </p>
-                  <StarRating
-                    value={purchase.user_rating ?? 0}
-                    onRate={v => rateAlbum.mutate({ album_id: purchase.album_id, rating: v })}
-                  />
+                  <div className="p-3">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="text-white text-sm font-medium">{purchase.album_name}</span>
+                      <span className={`border text-[9px] px-1.5 py-0.5 rounded tracking-wider ${rarity.cls}`}>{rarity.label}</span>
+                    </div>
+                    <p className="text-[#4a4b5a] text-xs mb-3">{purchase.artist_name}</p>
+                    <p className={`text-[10px] tracking-widest uppercase mb-1 ${purchase.user_rating ? 'text-[#00e5ff]' : 'text-[#4a4b5a]'}`}>
+                      {purchase.user_rating ? 'Your Rating' : 'Rate This Album'}
+                    </p>
+                    <StarRating
+                      value={purchase.user_rating ?? 0}
+                      onRate={v => rateAlbum.mutate({ album_id: purchase.album_id, rating: v })}
+                    />
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+          {libraryData && libraryData.total_pages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                page={libraryData.page}
+                totalPages={libraryData.total_pages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   )

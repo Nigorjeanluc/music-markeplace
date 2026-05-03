@@ -28,24 +28,26 @@ class AlbumService:
 
     def get_albums(
         self,
-        skip: int = 0,
-        limit: int = 100,
+        page: int = 1,
+        page_size: int = 20,
         artist_id: Optional[str] = None,
         genre: Optional[str] = None,
         search: Optional[str] = None
-    ) -> List[Tuple[Album, Optional[float], List[str], Optional[Artist]]]:
-        """Get albums with filters, returning tuples of (album, avg_rating, genre_names, artist)."""
+    ) -> Tuple[List[Tuple[Album, Optional[float], List[str], Optional[Artist]]], int]:
+        """Get albums with filters, returning (list of tuples, total count)."""
         query = self.db.query(Album)
         if artist_id:
             if not is_valid_uuid(artist_id):
-                return []
+                return ([], 0)
             query = query.filter(Album.artist_id == artist_id)
         if search:
             query = query.filter(Album.name.ilike(f"%{search}%"))
         if genre:
             query = query.join(AlbumGenre, AlbumGenre.album_id == Album.id).join(Genre, Genre.id == AlbumGenre.genre_id).filter(Genre.name == genre)
 
-        albums = query.offset(skip).limit(limit).all()
+        total = query.count()
+        skip = (page - 1) * page_size
+        albums = query.offset(skip).limit(page_size).all()
 
         # Compute rating and genre names for each album
         rating_subq = self._get_album_rating_subquery()
@@ -63,7 +65,7 @@ class AlbumService:
             artist = self.db.query(Artist).filter(Artist.id == album.artist_id).first()
 
             result.append((album, avg_rating, genre_names, artist))
-        return result
+        return (result, total)
 
     def get_album(self, album_id: str) -> Optional[Tuple[Album, Optional[float], List[str], Optional[Artist]]]:
         """Get album detail with rating, returning tuple of (album, avg_rating, genre_names, artist)."""

@@ -103,7 +103,9 @@ class TestGetUserRatings:
             "Authorization": f"Bearer {user_token}"
         })
         assert response.status_code == 200
-        assert isinstance(response.json(), list)
+        data = response.json()
+        assert "items" in data
+        assert isinstance(data["items"], list)
 
     def test_unauthenticated(self, client):
         response = client.get("/api/v1/ratings/me")

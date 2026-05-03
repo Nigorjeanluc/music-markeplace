@@ -106,9 +106,9 @@ class TestRatingServiceGetUserRatings:
         rating_s = RatingService(db_session)
         rating_s.create_or_update_rating(str(normal_user.id), RatingCreate(album_id=str(album.id), rating=4))
 
-        ratings = rating_s.get_user_ratings(str(normal_user.id))
-        assert len(ratings) >= 1
-        rating_obj, album_name, avg_rating = ratings[0]
+        result, total = rating_s.get_user_ratings(str(normal_user.id))
+        assert total >= 1
+        rating_obj, album_name, avg_rating = result[0]
         assert album_name == "A"
         assert rating_obj.rating == 4
 
@@ -128,9 +128,9 @@ class TestRatingServiceGetUserRatings:
             purchase_s.create_purchase(str(normal_user.id), PurchaseCreate(album_id=str(album.id)))
             rating_s.create_or_update_rating(str(normal_user.id), RatingCreate(album_id=str(album.id), rating=3))
 
-        page1 = rating_s.get_user_ratings(str(normal_user.id), skip=0, limit=3)
+        page1, total1 = rating_s.get_user_ratings(str(normal_user.id), page=1, page_size=3)
         assert len(page1) == 3
-        page2 = rating_s.get_user_ratings(str(normal_user.id), skip=3, limit=3)
+        page2, total2 = rating_s.get_user_ratings(str(normal_user.id), page=2, page_size=3)
         assert len(page2) == 2
 
 
@@ -154,7 +154,7 @@ class TestRatingServiceGetAlbumRatings:
 
         result = rating_s.get_album_ratings(str(album.id))
         assert result is not None
-        rating_responses, avg_rating = result
+        rating_responses, avg_rating, total = result
         assert len(rating_responses) >= 1
         assert avg_rating is not None
         assert rating_responses[0].album_name == "A"
@@ -176,13 +176,13 @@ class TestRatingServiceGetAlbumRatings:
         rating_s = RatingService(db_session)
         rating_s.create_or_update_rating(str(normal_user.id), RatingCreate(album_id=str(album.id), rating=4))
 
-        result = rating_s.get_album_ratings(str(album.id), skip=0, limit=0)
+        result = rating_s.get_album_ratings(str(album.id), page=1, page_size=0)
         assert result is not None
-        rating_responses, avg_rating = result
+        rating_responses, avg_rating, total = result
         assert len(rating_responses) == 0
 
-        result = rating_s.get_album_ratings(str(album.id), skip=0, limit=10)
+        result = rating_s.get_album_ratings(str(album.id), page=1, page_size=10)
         assert result is not None
-        rating_responses, avg_rating = result
+        rating_responses, avg_rating, total = result
         assert len(rating_responses) == 1
         assert rating_responses[0].user_rating == 4

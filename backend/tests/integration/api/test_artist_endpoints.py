@@ -5,11 +5,15 @@ class TestListArtists:
     def test_public_access(self, client):
         response = client.get("/api/v1/artists/")
         assert response.status_code == 200
-        assert isinstance(response.json(), list)
+        data = response.json()
+        assert "items" in data
+        assert isinstance(data["items"], list)
 
     def test_with_search(self, client):
         response = client.get("/api/v1/artists/?search=test")
         assert response.status_code == 200
+        data = response.json()
+        assert "items" in data
 
 
 class TestGetArtist:

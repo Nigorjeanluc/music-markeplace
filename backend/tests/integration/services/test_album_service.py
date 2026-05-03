@@ -50,9 +50,9 @@ class TestAlbumServiceGetAlbums:
         album_service = AlbumService(db_session)
         album_service.create_album(AlbumCreate(name="Album 1", price=10.0, artist_id=str(artist.id), genre_ids=[]))
 
-        albums = album_service.get_albums()
-        assert len(albums) >= 1
-        assert albums[0][0].name == "Album 1"  # First element is Album object
+        result, total = album_service.get_albums()
+        assert total >= 1
+        assert result[0][0].name == "Album 1"  # result[0] is (album, avg_rating, genre_names, artist)
 
     def test_filter_by_artist(self, db_session):
         # Create two artists
@@ -64,9 +64,9 @@ class TestAlbumServiceGetAlbums:
         album_service.create_album(AlbumCreate(name="Album 1", price=10.0, artist_id=str(artist1.id), genre_ids=[]))
         album_service.create_album(AlbumCreate(name="Album 2", price=12.0, artist_id=str(artist2.id), genre_ids=[]))
 
-        albums = album_service.get_albums(artist_id=str(artist1.id))
-        assert len(albums) == 1
-        assert albums[0][0].artist_id == artist1.id
+        result, total = album_service.get_albums(artist_id=str(artist1.id))
+        assert total == 1
+        assert result[0][0].artist_id == artist1.id
 
 
 class TestAlbumServiceGetAlbum:

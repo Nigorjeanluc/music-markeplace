@@ -3,10 +3,10 @@ import { artistsApi, albumsApi, purchasesApi, ratingsApi, genresApi, tracksApi, 
 
 // ── Artists ──────────────────────────────────────────────────────────────────
 
-export const useArtists = (search?: string) =>
+export const useArtists = (params?: { search?: string; page?: number; page_size?: number }) =>
   useQuery({
-    queryKey: ['artists', search],
-    queryFn: () => artistsApi.list({ search }),
+    queryKey: ['artists', params],
+    queryFn: () => artistsApi.list(params),
   })
 
 export const useArtist = (id: string) =>
@@ -43,7 +43,7 @@ export const useDeleteArtist = () => {
 
 // ── Albums ───────────────────────────────────────────────────────────────────
 
-export const useAlbums = (params?: { search?: string; artist_id?: string; genre?: string }) =>
+export const useAlbums = (params?: { search?: string; artist_id?: string; genre?: string; page?: number; page_size?: number }) =>
   useQuery({
     queryKey: ['albums', params],
     queryFn: () => albumsApi.list(params),
@@ -83,10 +83,10 @@ export const useDeleteAlbum = () => {
 
 // ── Purchases ────────────────────────────────────────────────────────────────
 
-export const useLibrary = (enabled: boolean) =>
+export const useLibrary = (enabled: boolean, params?: { page?: number; page_size?: number }) =>
   useQuery({
-    queryKey: ['library'],
-    queryFn: purchasesApi.library,
+    queryKey: ['library', params],
+    queryFn: () => purchasesApi.library(params),
     enabled,
   })
 
@@ -103,10 +103,10 @@ export const usePurchase = () => {
 
 // ── Ratings ──────────────────────────────────────────────────────────────────
 
-export const useMyRatings = (enabled: boolean) =>
+export const useMyRatings = (enabled: boolean, params?: { page?: number; page_size?: number }) =>
   useQuery({
-    queryKey: ['ratings', 'me'],
-    queryFn: ratingsApi.myRatings,
+    queryKey: ['ratings', 'me', params],
+    queryFn: () => ratingsApi.myRatings(params),
     enabled,
   })
 
@@ -138,10 +138,10 @@ export const useUpdateRating = () => {
   })
 }
 
-export const useAlbumRatings = (album_id: string) =>
+export const useAlbumRatings = (album_id: string, params?: { page?: number; page_size?: number }) =>
   useQuery({
-    queryKey: ['ratings', 'album', album_id],
-    queryFn: () => ratingsApi.albumRatings(album_id),
+    queryKey: ['ratings', 'album', album_id, params],
+    queryFn: () => ratingsApi.albumRatings(album_id, params),
     enabled: !!album_id,
   })
 
@@ -177,7 +177,7 @@ export const useDeleteGenre = () => {
 
 // ── Tracks ───────────────────────────────────────────────────────────────────
 
-export const useTracks = (params?: { album_id?: string; search?: string }) =>
+export const useTracks = (params?: { album_id?: string; search?: string; page?: number; page_size?: number }) =>
   useQuery({
     queryKey: ['tracks', params],
     queryFn: () => tracksApi.list(params),
