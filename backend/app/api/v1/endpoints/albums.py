@@ -1,11 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func, select
 from typing import List, Optional
 
 from app.db.session import get_db
 from app.core.security import get_current_admin_user
 from app.services.album_service import AlbumService
 from app.schemas.album import AlbumCreate, AlbumUpdate, AlbumResponse
+from app.schemas.pagination import PaginatedResponse
+from app.models.album import Album
+from app.models.artist import Artist
+from app.models.genre import Genre
+from app.models.album_genres import AlbumGenre
+from app.models.rating import Rating
+from app.models.purchase import Purchase
 
 router = APIRouter()
 
@@ -21,10 +29,10 @@ def get_album_rating_subquery():
     )
 
 
-@router.get("/", response_model=List[AlbumResponse])
+@router.get("/", response_model=PaginatedResponse[AlbumResponse])
 def list_albums(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     artist_id: Optional[str] = Query(None),
     genre: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
@@ -32,11 +40,13 @@ def list_albums(
 ):
     """List albums with filters (public endpoint)."""
     album_service = AlbumService(db)
-    albums_data = album_service.get_albums(skip=skip, limit=limit, artist_id=artist_id, genre=genre, search=search)
+    albums_data, total = album_service.get_albums(
+        page=page, page_size=page_size, artist_id=artist_id, genre=genre, search=search
+    )
 
-    result = []
+    items = []
     for album, avg_rating, genre_names, artist in albums_data:
-        result.append(AlbumResponse(
+        items.append(AlbumResponse(
             id=str(album.id),
             name=album.name,
             price=float(album.price),
@@ -45,10 +55,18 @@ def list_albums(
             artist_name=artist.performing_name if artist else "",
             rating=float(avg_rating) if avg_rating else None,
             genre_names=genre_names,
+            cover_image_url=album.cover_image_url,
             created_at=album.created_at,
             updated_at=album.updated_at,
         ))
-    return result
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
 
 
 @router.get("/{album_id}", response_model=AlbumResponse)
@@ -73,6 +91,7 @@ def get_album(album_id: str, db: Session = Depends(get_db)):
         artist_name=artist.performing_name if artist else "",
         rating=float(avg_rating) if avg_rating else None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )
@@ -111,6 +130,7 @@ def create_album(
         artist_name=artist.performing_name if artist else "",
         rating=None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )
@@ -152,6 +172,7 @@ def update_album(
         artist_name=artist.performing_name if artist else "",
         rating=float(avg_rating) if avg_rating else None,
         genre_names=genre_names,
+        cover_image_url=album.cover_image_url,
         created_at=album.created_at,
         updated_at=album.updated_at,
     )

@@ -8,6 +8,7 @@ from app.models.album import Album
 from app.models.artist import Artist
 from app.models.rating import Rating
 from app.schemas.purchase import PurchaseCreate, PurchaseResponse
+from app.core.uuid_utils import is_valid_uuid
 
 
 class PurchaseService:
@@ -16,6 +17,8 @@ class PurchaseService:
 
     def create_purchase(self, user_id: str, purchase_in: PurchaseCreate) -> Optional[Purchase]:
         """Purchase an album. Returns None if album not found."""
+        if not is_valid_uuid(user_id) or not is_valid_uuid(purchase_in.album_id):
+            return None
         album = self.db.query(Album).filter(Album.id == purchase_in.album_id).first()
         if not album:
             return None
@@ -35,9 +38,16 @@ class PurchaseService:
         self.db.refresh(purchase)
         return purchase
 
-    def get_user_purchases(self, user_id: str) -> List[Tuple[Purchase, Album, Optional[Artist], Optional[float], Optional[float]]]:
-        """Get all purchases for a user with album, artist, user rating, and avg rating."""
-        purchases = self.db.query(Purchase).filter(Purchase.user_id == user_id).all()
+    def get_user_purchases(
+        self, user_id: str, page: int = 1, page_size: int = 20
+    ) -> Tuple[List[Tuple[Purchase, Album, Optional[Artist], Optional[float], Optional[float]]], int]:
+        """Get all purchases for a user with album, artist, user rating, and avg rating. With pagination."""
+        if not is_valid_uuid(user_id):
+            return ([], 0)
+        query = self.db.query(Purchase).filter(Purchase.user_id == user_id)
+        total = query.count()
+        skip = (page - 1) * page_size
+        purchases = query.offset(skip).limit(page_size).all()
 
         result = []
         for purchase in purchases:
@@ -58,7 +68,7 @@ class PurchaseService:
             ).scalar()
 
             result.append((purchase, album, artist, user_rating, avg_rating))
-        return result
+        return (result, total)
 
     def build_purchase_response(self, purchase: Purchase, album: Album, artist: Optional[Artist]) -> PurchaseResponse:
         """Build PurchaseResponse from purchase, album, and artist."""

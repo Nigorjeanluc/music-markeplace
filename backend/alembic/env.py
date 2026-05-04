@@ -22,8 +22,9 @@ from app import models
 config = context.config
 
 #Override the sqlalchemy.url option in the config with the value from settings
-if settings.DATABASE_URL:
-    config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
+# Use DATABASE_URL_TEST if set (for tests), otherwise DATABASE_URL
+db_url = os.environ.get('ALEMBIC_DATABASE_URL') or settings.DATABASE_URL_TEST or settings.DATABASE_URL
+config.set_main_option('sqlalchemy.url', db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -8,6 +8,7 @@ from app.models.track import Track
 from app.models.album import Album
 from app.models.artist import Artist
 from app.schemas.playlist import PlaylistCreate, PlaylistUpdate, PlaylistResponse, PlaylistDetailResponse, TrackInPlaylist
+from app.core.uuid_utils import is_valid_uuid
 
 
 class PlaylistService:
@@ -20,6 +21,8 @@ class PlaylistService:
 
     def get_playlist(self, playlist_id: str, user_id: str) -> Optional[Playlist]:
         """Get a playlist by ID, ensuring it belongs to the user."""
+        if not is_valid_uuid(playlist_id) or not is_valid_uuid(user_id):
+            return None
         return self.db.query(Playlist).filter(
             Playlist.id == playlist_id,
             Playlist.user_id == user_id
@@ -27,6 +30,8 @@ class PlaylistService:
 
     def create_playlist(self, playlist_in: PlaylistCreate, user_id: str) -> Optional[Playlist]:
         """Create a new playlist with optional initial tracks."""
+        if not is_valid_uuid(user_id):
+            return None
         playlist = Playlist(
             name=playlist_in.name,
             user_id=user_id,
@@ -36,6 +41,9 @@ class PlaylistService:
 
         # Add initial tracks if provided
         for track_id in playlist_in.track_ids:
+            if not is_valid_uuid(track_id):
+                self.db.rollback()
+                return None
             track = self.db.query(Track).filter(Track.id == track_id).first()
             if not track:
                 self.db.rollback()
@@ -53,6 +61,8 @@ class PlaylistService:
 
     def update_playlist(self, playlist_id: str, playlist_in: PlaylistUpdate, user_id: str) -> Optional[Playlist]:
         """Update a playlist's name."""
+        if not is_valid_uuid(playlist_id) or not is_valid_uuid(user_id):
+            return None
         playlist = self.get_playlist(playlist_id, user_id)
         if not playlist:
             return None
@@ -67,6 +77,8 @@ class PlaylistService:
 
     def delete_playlist(self, playlist_id: str, user_id: str) -> bool:
         """Delete a playlist. Returns True if deleted, False if not found."""
+        if not is_valid_uuid(playlist_id) or not is_valid_uuid(user_id):
+            return False
         playlist = self.get_playlist(playlist_id, user_id)
         if not playlist:
             return False
@@ -77,6 +89,8 @@ class PlaylistService:
 
     def add_track_to_playlist(self, playlist_id: str, track_id: str, user_id: str) -> Optional[bool]:
         """Add a track to a playlist. Returns None if playlist/track not found, False if track already exists."""
+        if not is_valid_uuid(playlist_id) or not is_valid_uuid(track_id) or not is_valid_uuid(user_id):
+            return None
         playlist = self.get_playlist(playlist_id, user_id)
         if not playlist:
             return None
@@ -104,6 +118,8 @@ class PlaylistService:
 
     def remove_track_from_playlist(self, playlist_id: str, track_id: str, user_id: str) -> bool:
         """Remove a track from a playlist. Returns True if removed, False if not found."""
+        if not is_valid_uuid(playlist_id) or not is_valid_uuid(track_id) or not is_valid_uuid(user_id):
+            return False
         playlist = self.get_playlist(playlist_id, user_id)
         if not playlist:
             return False
@@ -121,12 +137,16 @@ class PlaylistService:
 
     def get_playlist_track_count(self, playlist_id: str) -> int:
         """Get the number of tracks in a playlist."""
+        if not is_valid_uuid(playlist_id):
+            return 0
         return self.db.query(func.count(PlaylistTrack.id)).filter(
             PlaylistTrack.playlist_id == playlist_id
         ).scalar() or 0
 
     def get_playlist_tracks(self, playlist_id: str) -> List[TrackInPlaylist]:
         """Get all tracks in a playlist with album/artist info."""
+        if not is_valid_uuid(playlist_id):
+            return []
         tracks_query = (
             self.db.query(Track, Album, Artist)
             .join(PlaylistTrack, PlaylistTrack.track_id == Track.id)

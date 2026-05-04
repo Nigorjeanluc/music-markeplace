@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,6 +9,7 @@ from app.models.album import Album
 from app.models.artist import Artist
 from app.services.purchase_service import PurchaseService
 from app.schemas.purchase import PurchaseCreate, PurchaseResponse
+from app.schemas.pagination import PaginatedResponse
 
 router = APIRouter()
 
@@ -40,16 +41,26 @@ def purchase_album(
     return purchase_service.build_purchase_response(purchase, album, artist)
 
 
-@router.get("/me/library", response_model=List[PurchaseResponse])
+@router.get("/me/library", response_model=PaginatedResponse[PurchaseResponse])
 def get_library(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get current user's purchased albums (personal library)."""
+    """Get current user's purchased albums (personal library). Supports pagination."""
     purchase_service = PurchaseService(db)
-    purchases_data = purchase_service.get_user_purchases(current_user.id)
+    purchases_data, total = purchase_service.get_user_purchases(current_user.id, page=page, page_size=page_size)
 
-    return [
+    items = [
         purchase_service.build_purchase_response_with_ratings(p, a, ar, ur, avg)
         for p, a, ar, ur, avg in purchases_data
     ]
+    total_pages = (total + page_size - 1) // page_size
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )

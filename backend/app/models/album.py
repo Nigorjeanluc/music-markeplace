@@ -14,6 +14,7 @@ class Album(Base):
     name = Column(String, index=True, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
     release_date = Column(Date, nullable=True)
+    cover_image_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

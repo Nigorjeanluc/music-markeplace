@@ -13,6 +13,7 @@ class Artist(Base):
     real_name = Column(String, nullable=False)
     performing_name = Column(String, unique=True, index=True, nullable=False)
     date_of_birth = Column(Date, nullable=False)
+    photo_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
