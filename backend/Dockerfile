@@ -19,6 +19,9 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Run migrations, seed, and start server
-# Shell form is used here so $PORT expands at runtime (set by Render, defaults to 8000)
-CMD sh -c "alembic upgrade head && python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers"
+# Copy and use startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Run migrations, seed, and start server (handled by start.sh)
+CMD ["/app/start.sh"]

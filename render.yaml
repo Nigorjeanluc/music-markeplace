@@ -1,0 +1,31 @@
+services:
+  # Backend API (Docker)
+  - type: web
+    name: music-market-backend
+    env: docker
+    plan: starter
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: "https://music-marketplace-frontend.onrender.com"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  # Frontend (Static Site)
+  - type: web
+    name: music-marketplace-frontend
+    env: static
+    plan: starter
+    branch: main
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://music-market-backend.onrender.com
