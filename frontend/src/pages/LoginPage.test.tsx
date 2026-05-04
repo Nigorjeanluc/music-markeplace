@@ -155,9 +155,10 @@ describe('LoginPage', () => {
     await user.click(submitButton)
 
     await waitFor(() => {
-      const errorElements = screen.getAllByText('Invalid credentials')
-      const visibleError = errorElements.find(el => !el.className.includes('hidden'))
-      expect(visibleError?.closest('div')).toHaveClass('bg-red-900/20')
+      const errorElement = screen.getByText('Invalid credentials')
+      expect(errorElement).toBeInTheDocument()
+      expect(errorElement).toHaveClass('text-red-400')
+      expect(errorElement).toHaveClass('text-center')
     })
   })
 
@@ -255,10 +256,7 @@ describe('LoginPage', () => {
     // Switch to register mode
     await user.click(screen.getByText('Register Identity 👤+'))
 
-    // Error should be cleared or hidden
-    const visibleErrors = screen.queryAllByText('Invalid credentials').filter(
-      el => !el.className.includes('hidden')
-    )
-    expect(visibleErrors.length).toBe(0)
+    // Error should be cleared
+    expect(screen.queryByText('Invalid credentials')).not.toBeInTheDocument()
   })
 })

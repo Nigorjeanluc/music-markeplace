@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Formik, Form, useField } from 'formik'
 import * as Yup from 'yup'
 import { useAuth } from '../context/AuthContext'
@@ -59,12 +59,14 @@ export default function LoginPage() {
       style={{ background: 'radial-gradient(ellipse at 20% 60%, #0d2a2a 0%, transparent 50%), radial-gradient(ellipse at 80% 40%, #1a0a2e 0%, transparent 50%), #0d0e14' }}
     >
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="font-black tracking-tight text-lg select-none">
-          <span style={{ background: 'linear-gradient(135deg, #00e5ff 0%, #00b8cc 50%, #aa3bff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Music
+        <Link to="/">
+          <span className="font-black tracking-tight text-lg select-none">
+            <span style={{ background: 'linear-gradient(135deg, #00e5ff 0%, #00b8cc 50%, #aa3bff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Music
+            </span>
+            <span className="text-white font-light tracking-widest text-sm ml-1 uppercase">Marketplace</span>
           </span>
-          <span className="text-white font-light tracking-widest text-sm ml-1 uppercase">Marketplace</span>
-        </span>
+        </Link>
         <nav className="flex gap-6 text-sm text-[#8a8b9a]">
           <a href="#" className="hover:text-white transition-colors">Support</a>
           <a href="#" className="hover:text-white transition-colors">Network Status</a>

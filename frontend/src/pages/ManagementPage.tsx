@@ -326,7 +326,7 @@ export default function ManagementPage() {
   ]
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 sm:px-8 pb-6 sm:pb-8">
       {artistModal.open && <ArtistModal artist={artistModal.artist} onClose={() => setArtistModal({ open: false })} />}
       {albumModal.open && <AlbumModal album={albumModal.album} onClose={() => setAlbumModal({ open: false })} />}
       {genreModal.open && <GenreModal genre={genreModal.genre} onClose={() => setGenreModal({ open: false })} />}
@@ -443,7 +443,7 @@ export default function ManagementPage() {
         ) : albums.length === 0 ? (
           <div className="text-center text-[#4a4b5a] text-sm py-8">No albums yet. Add one above.</div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {albums.map((album, i) => (
               <div key={album.id} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4 flex items-center gap-4 hover:border-[#2a2b38]/80 transition-colors">
                 <div

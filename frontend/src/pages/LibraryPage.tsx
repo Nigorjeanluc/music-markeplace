@@ -63,7 +63,7 @@ export default function LibraryPage() {
   const unrated = library.filter(p => !p.user_rating).length
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 sm:px-8 pb-6 sm:pb-8">
       <h1 className="text-white text-2xl font-semibold mb-1">User Library</h1>
       <p className="text-[#8a8b9a] text-sm mb-6">
         Access your private vault of digital sonic assets. Every frequency owned, every echo collected.

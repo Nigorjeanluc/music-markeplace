@@ -37,6 +37,6 @@ class Settings(BaseSettings):
     AWS_S3_CUSTOM_DOMAIN: str | None = None  # Optional CDN like CloudFront
     AWS_S3_REGION: str = "us-east-1"
 
-    model_config = ConfigDict(env_file=Path(__file__).parent.parent / ".env", case_sensitive=True)
+    model_config = ConfigDict(env_file=Path(__file__).parent.parent.parent / ".env", case_sensitive=True, extra="ignore")
 
 settings = Settings()

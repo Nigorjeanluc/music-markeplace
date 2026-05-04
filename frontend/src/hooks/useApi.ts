@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { artistsApi, albumsApi, purchasesApi, ratingsApi, genresApi, tracksApi, playlistsApi } from '../api/client'
+import { artistsApi, albumsApi, purchasesApi, ratingsApi, genresApi, tracksApi, playlistsApi, uploadApi } from '../api/client'
 
 // ── Artists ──────────────────────────────────────────────────────────────────
 
@@ -271,5 +271,16 @@ export const useRemoveTrackFromPlaylist = () => {
     mutationFn: ({ playlist_id, track_id }: { playlist_id: string; track_id: string }) =>
       playlistsApi.removeTrack(playlist_id, track_id),
     onSuccess: (_data, vars) => qc.invalidateQueries({ queryKey: ['playlists', vars.playlist_id] }),
+  })
+}
+
+// ── Upload ──────────────────────────────────────────────────────────────
+
+export const useUploadImage = () => {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (params: { file: File; folder?: string }) =>
+      uploadApi.image(params.file, params.folder),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['upload'] }),
   })
 }

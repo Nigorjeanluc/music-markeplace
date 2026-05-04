@@ -45,7 +45,7 @@ export default function MarketplacePage() {
 
   const isFiltered = !!submitted || !!activeGenre
   const displayAlbums = isFiltered ? (albumsData?.items ?? []) : (albumsData?.items?.slice(0, 8) ?? [])
-  const spotlightArtists = artists?.slice(0, 3) ?? []
+  const spotlightArtists = artists?.items?.slice(0, 3) ?? []
 
   const clearFilters = () => {
     setSearch('')
@@ -58,20 +58,20 @@ export default function MarketplacePage() {
     <div>
       {/* Hero */}
       <div
-        className="relative h-72 flex items-end overflow-hidden"
+        className="relative h-48 sm:h-60 md:h-72 flex items-end overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #0d1a2e 0%, #1a0a2e 50%, #0d0e14 100%)' }}
       >
         <div className="absolute inset-0 opacity-20"
           style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 40px, #00e5ff11 40px, #00e5ff11 41px), repeating-linear-gradient(90deg, transparent, transparent 40px, #00e5ff11 40px, #00e5ff11 41px)' }} />
         <div className="relative px-8 pb-8 w-full">
-          <h1 className="text-5xl font-bold text-[#00e5ff] mb-3" style={{ textShadow: '0 0 40px #00e5ff66' }}>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#00e5ff] mb-3" style={{ textShadow: '0 0 40px #00e5ff66' }}>
             Discover the Void
           </h1>
-          <p className="text-[#8a8b9a] text-sm max-w-sm mb-6">
+          <p className="text-[#8a8b9a] text-xs sm:text-sm max-w-sm mb-4 sm:mb-6">
             Curating the finest cyber-beats and atmospheric noir sounds from across the digital sprawl.
           </p>
           <form className="flex gap-0" onSubmit={e => { e.preventDefault(); setSubmitted(search); setActiveGenre(undefined) }}>
-            <div className="flex items-center bg-[#0d0e14]/80 border border-[#2a2b38] rounded-l px-4 py-2.5 gap-2 w-80">
+            <div className="flex items-center bg-[#0d0e14]/80 border border-[#2a2b38] rounded-l px-4 py-2.5 gap-2 w-full sm:w-80">
               <span className="text-[#4a4b5a]">🔍</span>
               <input
                 value={search}
@@ -87,7 +87,7 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      <div className="px-8 py-8">
+      <div className="px-4 sm:px-8 pb-6 sm:pb-8 pt-2">
         {/* Genre filter pills */}
         {genres && genres.length > 0 && (
           <div className="flex items-center gap-2 mb-6 flex-wrap">
@@ -132,7 +132,7 @@ export default function MarketplacePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6 sm:mb-10">
           {albumsLoading
             ? Array.from({ length: 8 }).map((_, i) => <AlbumSkeleton key={i} />)
             : displayAlbums.length === 0
@@ -196,7 +196,7 @@ export default function MarketplacePage() {
                 View All →
               </button>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {artistsLoading
                 ? Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4 animate-pulse h-28" />

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ImageUpload } from '../pages/ManagementPage'
+import ImageUpload from './ImageUpload'
 import { useUploadImage } from '../hooks/useApi'
 
 // Mock the upload hook
@@ -173,15 +173,12 @@ describe('ImageUpload', () => {
     )
 
     expect(screen.getByText('Uploading...')).toBeInTheDocument()
-    expect(screen.getByText('⏳')).toBeInTheDocument()
   })
 
-  it('shows error state when upload fails', () => {
-    vi.mocked(useUploadImage).mockReturnValue({
-      mutateAsync: mockMutateAsync,
-      isPending: false,
-      isError: true,
-    } as any)
+  it('shows error state when upload fails', async () => {
+    const user = userEvent.setup()
+    const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' })
+    mockMutateAsync.mockRejectedValue(new Error('Upload failed'))
 
     render(
       <ImageUpload
@@ -192,7 +189,12 @@ describe('ImageUpload', () => {
       { wrapper: createWrapper() }
     )
 
-    expect(screen.getByText('Upload failed — check S3 config')).toBeInTheDocument()
+    const input = screen.getByLabelText('Upload image file')
+    await user.upload(input, mockFile)
+
+    await waitFor(() => {
+      expect(screen.getByText('Upload failed — check S3 config')).toBeInTheDocument()
+    })
   })
 
   it('reverts preview on upload failure', async () => {

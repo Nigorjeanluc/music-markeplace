@@ -20,7 +20,7 @@ export default function ArtistsPage() {
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 sm:px-8 pb-6 sm:pb-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-white text-2xl font-semibold">Artists</h1>
@@ -45,16 +45,16 @@ export default function ArtistsPage() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5 animate-pulse h-36" />
+            <div key={i} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5 animate-pulse h-28 sm:h-36" />
           ))}
         </div>
       ) : !data?.items?.length ? (
         <p className="text-[#4a4b5a] text-sm text-center py-16">No artists found.</p>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.items.map(artist => (
               <div
                 key={artist.id}

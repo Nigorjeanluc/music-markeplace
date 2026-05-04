@@ -294,7 +294,7 @@ export default function PlaylistsPage() {
   }
 
   return (
-    <div className="px-8 py-8">
+    <div className="px-4 sm:px-8 pb-6 sm:pb-8">
       <div className="mb-6">
         <h1 className="text-white text-2xl font-semibold">Playlists</h1>
         <div className="h-0.5 w-8 bg-[#aa3bff] mt-1" />
@@ -305,7 +305,7 @@ export default function PlaylistsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-[#12131a] border border-[#2a2b38] rounded-lg h-20 animate-pulse" />
           ))}

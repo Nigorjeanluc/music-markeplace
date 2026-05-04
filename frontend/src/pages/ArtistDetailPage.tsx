@@ -9,13 +9,14 @@ export default function ArtistDetailPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { data: artist, isLoading, isError } = useArtist(id!)
-  const { data: albums } = useAlbums({ artist_id: id })
+  const { data: albumsData } = useAlbums({ artist_id: id })
+  const albums = albumsData?.items ?? []
 
   if (isLoading) {
     return (
       <div className="animate-pulse">
-        <div className="h-72 bg-[#1a1b24]" />
-        <div className="px-8 py-6 space-y-4">
+        <div className="h-48 sm:h-60 md:h-72 bg-[#1a1b24]" />
+        <div className="px-8 pb-6 pt-2 space-y-4">
           <div className="h-6 bg-[#1a1b24] rounded w-1/3" />
           <div className="h-4 bg-[#1a1b24] rounded w-2/3" />
         </div>
@@ -33,12 +34,12 @@ export default function ArtistDetailPage() {
   }
 
   // Derive real stats from discography
-  const ratedAlbums = albums?.filter(a => a.rating != null) ?? []
+  const ratedAlbums = albums.filter(a => a.rating != null)
   const avgRating = ratedAlbums.length > 0
     ? ratedAlbums.reduce((s, a) => s + a.rating!, 0) / ratedAlbums.length
     : null
-  const allGenres = [...new Set(albums?.flatMap(a => a.genre_names) ?? [])]
-  const totalValue = albums?.reduce((s, a) => s + a.price, 0) ?? 0
+  const allGenres = [...new Set(albums.flatMap(a => a.genre_names))]
+  const totalValue = albums.reduce((s, a) => s + a.price, 0)
 
   return (
     <div>
@@ -75,7 +76,7 @@ export default function ArtistDetailPage() {
         </div>
       </div>
 
-      <div className="px-8 py-6 grid grid-cols-3 gap-6">
+      <div className="px-8 pb-6 pt-2 grid grid-cols-3 gap-6">
         {/* Left: Bio + Discography */}
         <div className="col-span-2 space-y-6">
           <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-6">
@@ -83,7 +84,7 @@ export default function ArtistDetailPage() {
               <div className="w-6 h-0.5 bg-[#00e5ff]" />
               <span className="text-white text-sm font-medium">Bio</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Legal Identity</p>
                 <p className="text-white text-sm">{artist.real_name}</p>
@@ -108,10 +109,10 @@ export default function ArtistDetailPage() {
           {/* Discography */}
           <div>
             <h2 className="text-white font-semibold mb-4">Discography</h2>
-            {!albums || albums.length === 0 ? (
+            {!albumsData || albums.length === 0 ? (
               <p className="text-[#4a4b5a] text-sm">No albums yet.</p>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {albums.map((album, i) => (
                   <div
                     key={album.id}
@@ -168,13 +169,13 @@ export default function ArtistDetailPage() {
                   <p className="text-[#4a4b5a] text-sm">No ratings yet</p>
                 )}
               </div>
-              {albums && albums.length > 0 && (
+              {albumsData && albums.length > 0 && (
                 <div>
                   <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-1">Catalog Value</p>
                   <p className="text-white text-2xl font-bold">${totalValue.toFixed(2)}</p>
                 </div>
               )}
-              {albums && albums.length > 0 && (
+              {albumsData && albums.length > 0 && (
                 <div>
                   <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase mb-2">Rating Distribution</p>
                   <div className="h-1 bg-[#1a1b24] rounded-full">

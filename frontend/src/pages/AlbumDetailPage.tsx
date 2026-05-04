@@ -25,13 +25,15 @@ export default function AlbumDetailPage() {
   const navigate = useNavigate()
 
   const { data: album, isLoading, isError } = useAlbum(id!)
-  const { data: library } = useLibrary(!!user)
-  const { data: tracks } = useAlbumTracks(id!)
+  const { data: libraryData } = useLibrary(!!user)
+  const { data: tracksData } = useAlbumTracks(id!)
+  const library = libraryData?.items ?? []
+  const tracks = tracksData?.items ?? []
   const purchase = usePurchase()
   const rateAlbum = useRateAlbum()
 
-  const purchased = library?.some(p => p.album_id === id) ?? false
-  const myPurchase = library?.find(p => p.album_id === id)
+  const purchased = library.some(p => p.album_id === id)
+  const myPurchase = library.find(p => p.album_id === id)
   const userRating = myPurchase?.user_rating ?? 0
   const canRate = purchased && !!user
 
@@ -69,7 +71,7 @@ export default function AlbumDetailPage() {
   }
 
   return (
-    <div className="px-8 py-6">
+    <div className="px-8 pb-6">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-[#8a8b9a] text-xs tracking-widest uppercase hover:text-white transition-colors mb-6"

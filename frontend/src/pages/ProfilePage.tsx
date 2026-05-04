@@ -8,9 +8,11 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'overview' | 'ratings' | 'playlists'>('overview')
 
-  const { data: library } = useLibrary(!!user)
-  const { data: ratings } = useMyRatings(!!user)
+  const { data: libraryData } = useLibrary(!!user)
+  const { data: ratingsData } = useMyRatings(!!user)
   const { data: playlists } = usePlaylists(!!user)
+  const library = libraryData?.items ?? []
+  const ratings = ratingsData?.items ?? []
 
   if (!user) {
     return (
@@ -23,8 +25,8 @@ export default function ProfilePage() {
     )
   }
 
-  const totalSpent = library?.reduce((s, p) => s + p.amount_paid, 0) ?? 0
-  const avgRating = ratings && ratings.length > 0
+  const totalSpent = library.reduce((s, p) => s + p.amount_paid, 0)
+  const avgRating = ratings.length > 0
     ? ratings.reduce((s, r) => s + r.user_rating, 0) / ratings.length
     : null
 
@@ -58,9 +60,9 @@ export default function ProfilePage() {
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         {[
-          { label: 'Albums Owned', value: library?.length ?? 0, color: 'text-[#00e5ff]' },
+          { label: 'Albums Owned', value: library.length, color: 'text-[#00e5ff]' },
           { label: 'Total Spent', value: `$${totalSpent.toFixed(2)}`, color: 'text-[#aa3bff]' },
-          { label: 'Ratings Given', value: ratings?.length ?? 0, color: 'text-[#00e5ff]' },
+          { label: 'Ratings Given', value: ratings.length, color: 'text-[#00e5ff]' },
           { label: 'Playlists', value: playlists?.length ?? 0, color: 'text-[#aa3bff]' },
         ].map(s => (
           <div key={s.label} className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-4">
@@ -118,7 +120,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Recent purchases */}
-          {library && library.length > 0 && (
+          {library.length > 0 && (
             <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[10px] tracking-widest text-[#4a4b5a] uppercase">Recent Purchases</p>
@@ -150,7 +152,7 @@ export default function ProfilePage() {
       {/* Ratings tab */}
       {tab === 'ratings' && (
         <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg overflow-hidden">
-          {!ratings || ratings.length === 0 ? (
+          {ratings.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-[#4a4b5a] text-sm">No ratings yet.</p>
               <button onClick={() => navigate('/')} className="text-[#00e5ff] text-xs mt-2 hover:underline">Browse albums →</button>
@@ -184,14 +186,14 @@ export default function ProfilePage() {
             <p className="text-[#4a4b5a] text-xs">{playlists?.length ?? 0} playlist{playlists?.length !== 1 ? 's' : ''}</p>
             <button onClick={() => navigate('/playlists')} className="text-[#00e5ff] text-xs hover:underline">Manage Playlists →</button>
           </div>
-          {!playlists || playlists.length === 0 ? (
+          {playlists?.length === 0 ? (
             <div className="bg-[#12131a] border border-[#2a2b38] rounded-lg p-8 text-center">
               <p className="text-[#4a4b5a] text-sm">No playlists yet.</p>
               <button onClick={() => navigate('/playlists')} className="text-[#00e5ff] text-xs mt-2 hover:underline">Create one →</button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {playlists.map(pl => (
+              {playlists?.map(pl => (
                 <div
                   key={pl.id}
                   onClick={() => navigate('/playlists')}
