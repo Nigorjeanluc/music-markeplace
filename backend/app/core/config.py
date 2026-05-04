@@ -1,12 +1,20 @@
 from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic import ConfigDict, field_validator
 from typing import List
 from pathlib import Path
 
 class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = "postgresql://musicapp:musicapp123@db:5432/musicdb"
-    DATABASE_URL_TEST: str = "postgresql://musicapp:musicapp123@db:5432/musicdb_test"
+    # Database - no default to force using environment variable
+    DATABASE_URL: str
+    DATABASE_URL_TEST: str = ""
+
+    @field_validator("DATABASE_URL", "DATABASE_URL_TEST")
+    @classmethod
+    def validate_db_url(cls, v: str) -> str:
+        """Convert postgres:// to postgresql:// for SQLAlchemy compatibility."""
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     # Security
     SECRET_KEY: str = "your-super-secret-key-change-this"
