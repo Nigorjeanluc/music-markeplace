@@ -2,13 +2,9 @@ services:
   # Single service serving both frontend and backend
   - type: web
     name: music-marketplace
-    env: python
+    env: docker
     plan: starter
     branch: main
-    buildCommand: |
-      pip install -r backend/requirements.txt && \
-      cd frontend && npm install && npm run build
-    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
     healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
