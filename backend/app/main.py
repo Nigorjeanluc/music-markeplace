@@ -51,7 +51,12 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
 # Serve frontend static files
-FRONTEND_DIST = Path(__file__).parent.parent.parent / "frontend" / "dist"
+# Try multiple possible locations for frontend/dist
+# In Docker: /app/app/main.py -> /app/frontend/dist (2 parents up)
+# In dev: /project/backend/app/main.py -> /project/frontend/dist (3 parents up)
+_p1 = Path(__file__).parent.parent.parent / "frontend" / "dist"  # dev
+_p2 = Path(__file__).parent.parent / "frontend" / "dist"  # docker
+FRONTEND_DIST = _p1 if _p1.exists() else _p2
 
 if FRONTEND_DIST.exists():
     # Serve static assets (js, css, images, etc.)
