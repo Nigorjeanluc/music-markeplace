@@ -1,10 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from pathlib import Path
 from app.core.config import settings
 from app.api.v1.router import api_router
 
@@ -14,7 +11,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# CORS middleware (still useful for development or if accessed from other origins)
+# CORS middleware
 cors_origins = settings.get_allowed_origins() if settings.get_allowed_origins() else ["*"]
 allow_credentials = False if cors_origins == ["*"] else True
 
@@ -46,35 +43,14 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/")
+def read_root():
+    return {
+        "message": "Music Marketplace API",
+        "version": settings.VERSION,
+        "docs": "/docs"
+    }
+
+
 # Include API routers
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-
-# Serve frontend static files
-# Try multiple possible locations for frontend/dist
-# In Docker: /app/app/main.py -> /app/frontend/dist (2 parents up)
-# In dev: /project/backend/app/main.py -> /project/frontend/dist (3 parents up)
-_p1 = Path(__file__).parent.parent.parent / "frontend" / "dist"  # dev
-_p2 = Path(__file__).parent.parent / "frontend" / "dist"  # docker
-FRONTEND_DIST = _p1 if _p1.exists() else _p2
-
-if FRONTEND_DIST.exists():
-    # Serve static assets (js, css, images, etc.)
-    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
-
-    # Serve index.html for all other routes (SPA support)
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        index_file = FRONTEND_DIST / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
-        return {"message": "Music Marketplace API", "version": settings.VERSION, "docs": "/docs"}
-else:
-    @app.get("/")
-    def read_root():
-        return {
-            "message": "Music Marketplace API",
-            "version": settings.VERSION,
-            "docs": "/docs",
-            "note": "Frontend not built. Run 'cd frontend && npm run build'"
-        }
