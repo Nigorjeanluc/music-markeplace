@@ -12,7 +12,7 @@ app = FastAPI(
 )
 
 # CORS middleware - explicitly handle all responses including errors
-cors_origins = settings.ALLOWED_ORIGINS if settings.ALLOWED_ORIGINS else ["*"]
+cors_origins = settings.get_allowed_origins() if settings.get_allowed_origins() else ["*"]
 allow_credentials = False if cors_origins == ["*"] else True
 
 app.add_middleware(

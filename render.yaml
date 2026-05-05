@@ -14,7 +14,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://music-marketplace-frontend.onrender.com"
+        value: '["https://music-marketplace-frontend.onrender.com"]'
       - key: PYTHONUNBUFFERED
         value: "1"
 
