@@ -1,10 +1,12 @@
 services:
-  # Backend API (Docker)
+  # Backend API (Python)
   - type: web
     name: music-market-backend
-    env: docker
+    env: python
     plan: starter
     branch: main
+    buildCommand: cd backend && pip install -r requirements.txt && alembic upgrade head
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
     healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
@@ -17,6 +19,10 @@ services:
         value: '["https://music-marketplace-frontend.onrender.com"]'
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: musicdb
+          property: connectionString
 
   # Frontend (Static Site)
   - type: web
@@ -29,3 +35,9 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://music-market-backend.onrender.com
+
+databases:
+  - name: musicdb
+    databaseName: musicdb
+    user: musicapp
+    plan: starter
