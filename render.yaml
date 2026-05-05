@@ -1,11 +1,13 @@
 services:
-  # Backend API (Python)
+  # Single service serving both frontend and backend
   - type: web
-    name: music-market-backend
+    name: music-marketplace
     env: python
     plan: starter
     branch: main
-    buildCommand: pip install -r backend/requirements.txt
+    buildCommand: |
+      pip install -r backend/requirements.txt && \
+      cd frontend && npm install && npm run build
     startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
     healthCheckPath: /health
     envVars:
@@ -16,25 +18,13 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: '["https://music-marketplace-frontend.onrender.com"]'
+        value: '["*"]'
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: DATABASE_URL
         fromDatabase:
           name: musicdb
           property: connectionString
-
-  # Frontend (Static Site)
-  - type: web
-    name: music-marketplace-frontend
-    env: static
-    plan: starter
-    branch: main
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://music-market-backend.onrender.com
 
 databases:
   - name: musicdb
